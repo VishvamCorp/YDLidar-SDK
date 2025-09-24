@@ -150,8 +150,8 @@ result_t DTSLidarDriver::stop()
  * @return
  */
 result_t DTSLidarDriver::grabScanData(
-    node_info *nodebuffer, 
-    size_t &count, 
+    node_info *nodebuffer,
+    size_t &count,
     uint32_t timeout)
 {
     result_t ret = RESULT_FAIL;
@@ -189,7 +189,7 @@ result_t DTSLidarDriver::grabScanData(
  */
 result_t DTSLidarDriver::waitScanData(
     node_info *nodes,
-    size_t &count, 
+    size_t &count,
     uint32_t timeout)
 {
     result_t ret = RESULT_FAIL;
@@ -205,7 +205,7 @@ result_t DTSLidarDriver::waitScanData(
     uint32_t wt = 0;
 
     //循环等待接收节点数据
-    while ((wt = getms() - st) < timeout && 
+    while ((wt = getms() - st) < timeout &&
         recvCount < count)
     {
         node_info node;
@@ -301,7 +301,7 @@ result_t DTSLidarDriver::createThread()
         printf("[YDLIDAR] Fail to create DTS thread\n");
         return RESULT_FAIL;
     }
-    printf("[YDLIDAR] Create DTS thread [0x%X]\n", _thread.getHandle());
+    printf("[YDLIDAR] Create DTS thread [0x%lX]\n", _thread.getHandle());
     fflush(stdout);
     m_isScanning = true;
 

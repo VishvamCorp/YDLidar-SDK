@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
   /// unit: Hz
   laser.setlidaropt(LidarPropScanFrequency, &frequency, sizeof(float));
 
-  //启用调试
+  //Enable debugging
   // laser.setEnableDebug(true);
 
   /// initialize SDK and LiDAR.
@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
     return -1;
   }
 
-  LaserScan scan; //点云
+  LaserScan scan; //Point cloud
   while (ret && ydlidar::os_isOk())
   {
     if (laser.doProcessSimple(scan))

@@ -3,14 +3,14 @@
 #include "FilterInterface.h"
 
 
-//强光滤波器（拖尾滤波器）
+//Strong light filter (tail filter)
 class YDLIDAR_API StrongLightFilter : public FilterInterface
 {
 public:
-    enum FilterStrategy //方法
+    enum FilterStrategy //Strategies
     {
-        FS_1, //方法1，角度距离法
-        FS_2, //方法2，截距法
+        FS_1, //Method 1: angle-distance approach
+        FS_2, //Method 2: intercept approach
     };
 public:
     StrongLightFilter();
@@ -39,21 +39,21 @@ protected:
 
         Point(float x = .0, float y = .0);
 
-        static Point angular2Polar(const Point &p); // 直角坐标转极坐标
-        static Point polar2Angular(const Point &p); // 极坐标转直角坐标
-        // 计算直角坐标系中点到直线的距离
+        static Point angular2Polar(const Point &p); //Convert Cartesian coordinates to polar
+        static Point polar2Angular(const Point &p); //Convert polar coordinates to Cartesian
+        //Compute the distance from a point to a line in Cartesian space
         static float calcDist(
             const Point &p,
             const Point &p1,
             const Point &p2);
-        //计算向量的长度
+        //Compute vector length
         static float calcLen(
             const Point &v);
-        //计算向量的乘积
+        //Compute dot product of two vectors
         static float calcDot(
             const Point &v1,
             const Point &v2);
-        //计算直角坐标系中两线段组成直线的夹角
+        //Compute the angle between two line segments in Cartesian space
         static float calcAngle(
             const Point &p1,
             const Point &p2,
@@ -61,11 +61,11 @@ protected:
             const Point &p4);
     };
 
-    //过滤方法
+    //Filtering strategy
     int m_strategy = FS_2;
-    float maxDist = 0.05; //最大距离阈值，单位米（此值可根据需要自己修改）
-    float maxAngle = 12.0; //最大角度阈值，单位°（此值可根据需要自己修改）
-    int minNoise = 2; //最小连续噪点数（此值可根据需要自己修改）
+    float maxDist = 0.05; //Maximum distance threshold in meters (adjust as needed)
+    float maxAngle = 12.0; //Maximum angle threshold in degrees (adjust as needed)
+    int minNoise = 2; //Minimum count of consecutive noise points (adjust as needed)
 };
 
 #endif // STRONGLIGHTFILTER_H

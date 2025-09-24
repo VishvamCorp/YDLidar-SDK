@@ -59,17 +59,17 @@ using namespace base;
  */
 namespace common {
 
-//颜色定义
+//Color definitions
 #ifndef COLOR
-    #define COLOFF  "\033[0m"      ///关闭所有属性
-    #define RED      "\033[0;31m"   ///"\033[显示方式;字体颜色;背景颜色m"
+    #define COLOFF  "\033[0m"      ///Disable all attributes
+    #define RED      "\033[0;31m"   ///"\033[display mode;font color;background color m"
     #define GREEN    "\033[0;32m"
     #define YELLOW   "\033[0;33m"
     #define BLUE     "\033[0;34m"
     #define PURPLE   "\033[0;35m"
 #endif
 
-//打印系统时间
+//Print system time
 #define UNIX_PRINT_TIME  \
   time_t currentTime = time(NULL); \
   struct tm *localTime = localtime(&currentTime); \
@@ -86,29 +86,28 @@ namespace common {
 #else
   #define PRINT_TIME UNIX_PRINT_TIME
 #endif
-//格式化字符串
+//Format string
 #define FORMAT_STDOUT \
   char buff[1024] = {0}; \
   va_list ap; \
   va_start(ap, fmt); \
-  vsprintf(buff, fmt, ap); \
+  vsnprintf(buff, sizeof(buff), fmt, ap); \
   va_end(ap); \
-  printf(buff); \
-  printf("\n");
+  printf("%s\n", buff);
 
-//调试
-inline void debug(char* fmt, ...)
+//Debug
+inline void debug(const char* fmt, ...)
 {
-  printf(GREEN); //设置绿色
+  printf(GREEN); //Set to green
   PRINT_TIME
   printf("[debug] ");
   FORMAT_STDOUT
-  printf(COLOFF); //恢复默认颜色
+  printf(COLOFF); //Restore default color
   fflush(stdout);
 }
 
-//常规
-inline void info(char* fmt, ...)
+//Info
+inline void info(const char* fmt, ...)
 {
   PRINT_TIME
   printf("[info] ");
@@ -116,46 +115,46 @@ inline void info(char* fmt, ...)
   fflush(stdout);
 }
 
-//警告
-inline void warn(char* fmt, ...)
+//Warning
+inline void warn(const char* fmt, ...)
 {
-  printf(YELLOW); //设置黄色
+  printf(YELLOW); //Set to yellow
   PRINT_TIME
   printf("[warn] ");
   FORMAT_STDOUT
-  printf(COLOFF); //恢复默认颜色
+  printf(COLOFF); //Restore default color
   fflush(stdout);
 }
 
-//错误
-inline void error(char* fmt, ...)
+//Error
+inline void error(const char* fmt, ...)
 {
-  printf(RED); //设置红色
+  printf(RED); //Set to red
   PRINT_TIME
   printf("[error] ");
   FORMAT_STDOUT
-  printf(COLOFF); //恢复默认颜色
+  printf(COLOFF); //Restore default color
   fflush(stdout);
 }
 
-//调试（16进制）
+//Debug (hex)
 inline void debugh(const uint8_t *data, int size, const char* prefix=NULL)
 {
   if (!data || !size)
     return;
-  printf(GREEN); //设置绿色
+  printf(GREEN); //Set to green
   PRINT_TIME
   printf("[debug] ");
   if (prefix)
-      printf(prefix);
+      printf("%s", prefix);
   for (int i=0; i<size; ++i)
       printf("%02X", data[i]);
   printf("\n");
-  printf(COLOFF); //恢复默认颜色
+  printf(COLOFF); //Restore default color
   fflush(stdout);
 }
 
-//常规（16进制）
+//Info (hex)
 inline void infoh(const uint8_t *data, int size, const char* prefix=NULL)
 {
   if (!data || !size)
@@ -163,7 +162,7 @@ inline void infoh(const uint8_t *data, int size, const char* prefix=NULL)
   PRINT_TIME
   printf("[info] ");
   if (prefix)
-      printf(prefix);
+      printf("%s", prefix);
   for (int i=0; i<size; ++i)
       printf("%02X", data[i]);
   printf("\n");
@@ -305,11 +304,11 @@ inline std::string lidarModelToString(int model)
  * @param model lidar model.
  * @return lidar sampling rate.
  */
-inline std::vector<int> getDefaultSampleRate(int model) 
+inline std::vector<int> getDefaultSampleRate(int model)
 {
   std::vector<int> srs;
 
-  switch (model) 
+  switch (model)
   {
     case DriverInterface::YDLIDAR_F4:
     case DriverInterface::YDLIDAR_T1:
@@ -405,7 +404,7 @@ inline bool isOctaveLidar(int model)
   return ret;
 }
 
-//根据雷达码判断是否是Tmini系列雷达
+//Determine whether the model code corresponds to a Tmini-series lidar
 inline bool isTminiLidar(int model)
 {
   return (model == DriverInterface::YDLIDAR_Tmini ||
@@ -414,13 +413,13 @@ inline bool isTminiLidar(int model)
           model == DriverInterface::YDLIDAR_TSAPro);
 }
 
-//根据雷达码判断是否是SCL雷达
+//Determine whether the model code corresponds to an SCL lidar
 inline bool isSCLLidar2(int model)
 {
   return model == DriverInterface::YDLIDAR_SCL;
 }
 
-//根据雷达码判断是否是TEA雷达
+//Determine whether the model code corresponds to a TEA lidar
 inline bool isTEALidar(int model)
 {
   return model == DriverInterface::YDLIDAR_TEA;
@@ -431,7 +430,7 @@ inline bool isTEALidar(int model)
  * @param model   lidar model
  * @return true if THere are multiple sampling rate, otherwise false.
  */
-inline bool hasSampleRate(int model) 
+inline bool hasSampleRate(int model)
 {
   bool ret = false;
 
@@ -488,7 +487,7 @@ inline bool hasZeroAngle(int model) {
  * @param model   lidar model
  * @return true if supported, otherwise false.
  */
-inline bool hasScanFrequencyCtrl(int model) 
+inline bool hasScanFrequencyCtrl(int model)
 {
   bool ret = true;
 
@@ -498,7 +497,7 @@ inline bool hasScanFrequencyCtrl(int model)
       model == DriverInterface::YDLIDAR_X4 ||
       model == DriverInterface::YDLIDAR_GS1 ||
       model == DriverInterface::YDLIDAR_GS2 ||
-      model == DriverInterface::YDLIDAR_GS5) 
+      model == DriverInterface::YDLIDAR_GS5)
   {
     ret = false;
   }
@@ -516,7 +515,7 @@ inline bool isSupportLidar(int model)
   if (model > DriverInterface::YDLIDAR_None &&
       model < DriverInterface::YDLIDAR_Tail)
     return true;
-  
+
   return false;
 }
 
@@ -525,7 +524,7 @@ inline bool isSupportLidar(int model)
  * @param model   lidar model
  * @return true if supported, otherwise false.
  */
-inline bool hasIntensity(int model) 
+inline bool hasIntensity(int model)
 {
   bool ret = false;
 
@@ -696,7 +695,7 @@ inline bool isTriangleLidar(int type) {
  * @param type  LiDAR type
  * @return true if it is a Triangle type, otherwise false.
  */
-inline bool isGSLidar(int type) 
+inline bool isGSLidar(int type)
 {
   return (type == TYPE_GS);
 }
@@ -706,7 +705,7 @@ inline bool isGSLidar(int type)
  * @param type  LiDAR type
  * @return true if it is a Triangle SCL type, otherwise false.
  */
-inline bool isSCLLidar(int type) 
+inline bool isSCLLidar(int type)
 {
   return (type == TYPE_SCL);
 }
@@ -784,7 +783,7 @@ inline bool isSupportHeartBeat(int model) {
  * @param smap  sampling rate map
  * @return true if it is valid, otherwise false.
  */
-inline bool isValidSampleRate(std::map<int, int> smap) 
+inline bool isValidSampleRate(std::map<int, int> smap)
 {
   if (smap.size() < 1) {
     return false;
@@ -813,7 +812,7 @@ inline int ConvertUserToLidarSmaple(int model,
                                     int defaultRate)
 {
   int _samp_rate = 9;
-  switch (sampleRate) 
+  switch (sampleRate)
   {
     case 10:
       _samp_rate = DriverInterface::YDLIDAR_RATE_4K;
@@ -832,10 +831,10 @@ inline int ConvertUserToLidarSmaple(int model,
       break;
   }
 
-  if (!isOctaveLidar(model)) 
+  if (!isOctaveLidar(model))
   {
     _samp_rate = 2;
-    switch (sampleRate) 
+    switch (sampleRate)
     {
       case 4:
         _samp_rate = DriverInterface::YDLIDAR_RATE_4K;
@@ -849,10 +848,10 @@ inline int ConvertUserToLidarSmaple(int model,
       default:
         break;
     }
-    if (model == DriverInterface::YDLIDAR_F4PRO) 
+    if (model == DriverInterface::YDLIDAR_F4PRO)
     {
       _samp_rate = 0;
-      switch (sampleRate) 
+      switch (sampleRate)
       {
         case 4:
           _samp_rate = DriverInterface::YDLIDAR_RATE_4K;
@@ -875,11 +874,11 @@ inline int ConvertUserToLidarSmaple(int model,
  * @param rate      LiDAR sampling rate code
  * @return user sampling code
  */
-inline int ConvertLidarToUserSmaple(int model, int rate) 
+inline int ConvertLidarToUserSmaple(int model, int rate)
 {
   int _samp_rate = 9;
 
-  if (!isOctaveLidar(model) && 
+  if (!isOctaveLidar(model) &&
       !isTOFLidarByModel(model))
   {
     switch (rate)
@@ -899,7 +898,7 @@ inline int ConvertLidarToUserSmaple(int model, int rate)
       _samp_rate = 10;
       break;
     default:
-      //修改默认为当前获取到采样率值
+      //Default to the currently reported sampling rate
       _samp_rate = rate;
       break;
     }
@@ -924,7 +923,7 @@ inline int ConvertLidarToUserSmaple(int model, int rate)
       _samp_rate = 10;
       break;
     default:
-      //修改默认为当前获取到采样率值
+      //Default to the currently reported sampling rate
       _samp_rate = rate;
       break;
     }
@@ -987,7 +986,7 @@ inline bool isSerialNumbValid(const LaserDebug &info) {
  * @param node  LiDAR node_info information
  * @param info  LiDAR LaserDebug information
  */
-inline void parsePackageNode(const node_info &node, LaserDebug &info) 
+inline void parsePackageNode(const node_info &node, LaserDebug &info)
 {
   switch (node.index) {
     case 0:
@@ -999,7 +998,7 @@ inline void parsePackageNode(const node_info &node, LaserDebug &info)
       info.debug2 = node.debugInfo;
       break;
     case 3:
-      //健康信息
+      //Health information
       info.health = node.debugInfo;
       break;
     case 4:
@@ -1064,7 +1063,7 @@ inline bool parseLaserDebugInfo(const LaserDebug &debug, device_info &di)
   uint8_t Year = uint8_t(debug.year >> 2);
   uint8_t Moth = uint8_t(debug.month >> 3);
   uint8_t Date = uint8_t(debug.day >> 2);
-  uint32_t Number = 
+  uint32_t Number =
     uint32_t(debug.year & 0x03) << 19 |
     uint32_t(debug.month & 0x07) << 16 |
     uint32_t(debug.day & 0x03) << 14 |
@@ -1083,7 +1082,7 @@ inline bool parseLaserDebugInfo(const LaserDebug &debug, device_info &di)
     ss << std::setw(2) << std::setfill('0') << int(Date);
     ss << std::setw(8) << std::setfill('0') << Number;
     std::string sn(ss.str());
-    // 此处sprintf函数在Python调用中会导致缓存溢出
+    // Using sprintf here causes a buffer overflow when invoked from Python
     //  sprintf(reinterpret_cast<char*>(di.serialnum),
     //    "%04u%02u%02u%08u", Year + 2020, Moth, Date, Number);
     for (int i = 0; i < SDK_SNLEN && i < sn.size(); i++)
@@ -1098,31 +1097,34 @@ inline bool parseLaserDebugInfo(const LaserDebug &debug, device_info &di)
 }
 
 YDLIDAR_API inline bool printfDeviceInfo(const device_info &di,
-                              int platformType=EPT_Module)
+                              int platformType = EPT_Module)
 {
-  if (di.firmware_version == 0 &&
-      di.hardware_version == 0) {
+  if (di.firmware_version == 0 && di.hardware_version == 0) {
     return false;
   }
 
   uint8_t Major = (uint8_t)(di.firmware_version >> 8);
-  uint8_t Minjor = (uint8_t)(di.firmware_version & 0xff);
+  uint8_t Minor = (uint8_t)(di.firmware_version & 0xff);
+
   std::string sn;
-    for (int i = 0; i < SDK_SNLEN; i++)
-      sn += char(di.serialnum[i] + 48); //整型值转字符值
-    // printf("%01X", di.serialnum[i] & 0xff);
-  
-  info("%s device info\n"
-         "Firmware version: %u.%u\n"
-         "Hardware version: %u\n"
-         "Model: %s\n"
-         "Serial: %s",
-         EPT_Module == platformType ? "Module" : "Baseplate",
-         Major,
-         Minjor,
-         di.hardware_version,
-         lidarModelToString(di.model).c_str(),
-         sn.c_str());
+  sn.reserve(SDK_SNLEN);
+  for (int i = 0; i < SDK_SNLEN; i++) {
+    sn += static_cast<char>(di.serialnum[i] + 48);
+  }
+
+  // Используем более безопасный подход
+  const std::string device_type = (EPT_Module == platformType) ? "Module" : "Baseplate";
+  const std::string model_str = lidarModelToString(di.model);
+
+  std::ostringstream oss;
+  oss << device_type << " device info\n"
+      << "Firmware version: " << static_cast<unsigned>(Major)
+      << "." << static_cast<unsigned>(Minor) << "\n"
+      << "Hardware version: " << di.hardware_version << "\n"
+      << "Model: " << model_str << "\n"
+      << "Serial: " << sn;
+
+  info("%s", oss.str().c_str());
 
   return true;
 }
@@ -1158,7 +1160,7 @@ inline bool isV1Protocol(uint8_t protocol)
   return false;
 }
 
-//获取数据值（小端序）
+//Get data value (little-endian)
 inline uint32_t getLittleValue(const uint8_t *data, int size)
 {
   uint32_t v = 0;
@@ -1169,7 +1171,7 @@ inline uint32_t getLittleValue(const uint8_t *data, int size)
   return v;
 }
 
-//获取数据值（大端序）
+//Get data value (big-endian)
 inline uint32_t getBigValue(const uint8_t *data, int size)
 {
   uint32_t v = 0;

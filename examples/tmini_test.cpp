@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
   //////////////////////int property/////////////////
   /// lidar baudrate
   laser.setlidaropt(LidarPropSerialBaudrate, &baudrate, sizeof(int));
-  //TYPE_TRIANGLE(Tmini Pro\Tmini Plus),TYPE_TOF(Tmini Plus(森合))
+  //TYPE_TRIANGLE(Tmini Pro\Tmini Plus), TYPE_TOF(Tmini Plus (Senhe))
   int optval = TYPE_TRIANGLE;
   laser.setlidaropt(LidarPropLidarType, &optval, sizeof(int));
   /// device type
@@ -131,11 +131,11 @@ int main(int argc, char *argv[])
   /// unit: Hz
   laser.setlidaropt(LidarPropScanFrequency, &frequency, sizeof(float));
 
-  //禁用阳光玻璃过滤
+  //Disable sun/glass filtering
   laser.enableGlassNoise(false);
   laser.enableSunNoise(false);
 
-  //laser.setEnableDebug(true); //调试开关
+  //laser.setEnableDebug(true); //Debug switch
 
   bool ret = laser.initialize();
   if (!ret) 
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
     return -1;
   }
 
-  //森合获取俯仰角值
+  //Retrieve pitch angle for Senhe version
   float pitch = .0f;
   if (!laser.getPitchAngle(pitch))
   {
@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
     info("Pitch angle [%.02f]°", pitch);
   }
 
-  //启动扫描
+  //Start scanning
   ret = laser.turnOn();
   if (!ret) 
   {

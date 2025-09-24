@@ -57,6 +57,7 @@
 #include "core/base/thread.h"
 #include "core/common/ydlidar_protocol.h"
 #include "core/common/ydlidar_help.h"
+#include "core/logger/logger.hpp"
 
 #if !defined(__cplusplus)
 #ifndef __cplusplus
@@ -65,23 +66,23 @@
 #endif
 
 #define SDK_SDM_POINT_COUNT 1
-#define SDK_CMD_HEADFLAG0 0xAA //协议头标识1
-#define SDK_CMD_HEADFLAG1 0x55 //协议头标识2
-#define SDK_CMD_STARTSCAN 0x60 //开启测距
-#define SDK_CMD_STOPSCAN 0x61 //停止测距
-#define SDK_CMD_GETVERSION 0x62 //获取版本信息
-#define SDK_CMD_SELFCHECK 0x63 //自检
-#define SDK_CMD_SETFREQ 0x64 //设置输出频率
-#define SDK_CMD_SETFILTER 0x65 //设置滤波
-#define SDK_CMD_SETBAUDRATE 0x66 //设置串口波特率
-#define SDK_CMD_SETOUTPUT 0x67 //设置输出的数据格式
-#define SDK_CMD_RESET 0x68 //恢复出厂设置
-#define SDK_BUFFER_MAXLEN 100 //缓存长度
+#define SDK_CMD_HEADFLAG0 0xAA //Protocol header flag 1
+#define SDK_CMD_HEADFLAG1 0x55 //Protocol header flag 2
+#define SDK_CMD_STARTSCAN 0x60 //Start ranging
+#define SDK_CMD_STOPSCAN 0x61 //Stop ranging
+#define SDK_CMD_GETVERSION 0x62 //Get version information
+#define SDK_CMD_SELFCHECK 0x63 //Self-check
+#define SDK_CMD_SETFREQ 0x64 //Set output frequency
+#define SDK_CMD_SETFILTER 0x65 //Configure filtering
+#define SDK_CMD_SETBAUDRATE 0x66 //Set serial baud rate
+#define SDK_CMD_SETOUTPUT 0x67 //Set output data format
+#define SDK_CMD_RESET 0x68 //Restore factory settings
+#define SDK_BUFFER_MAXLEN 100 //Buffer length
 
-//设置1字节对齐
+//Use 1-byte alignment
 #pragma pack(1)
 
-//SDM雷达协议头
+//SDM lidar protocol header
 struct SdkSdmHead {
     uint8_t head0 = 0;
     uint8_t head1 = 0;
@@ -89,26 +90,26 @@ struct SdkSdmHead {
     uint8_t size = 0;
 };
 #define SDKSDMHEADSIZE sizeof(SdkSdmHead)
-//SDM雷达单点数据
+//SDM lidar single-point data
 struct SdkSdmPc {
-    uint16_t dist = 0; //距离
-    uint8_t intensity = 0; //强度
-    uint8_t env = 0; //环境干扰数据
+    uint16_t dist = 0; //Distance
+    uint8_t intensity = 0; //Intensity
+    uint8_t env = 0; //Environmental interference data
 };
-//SDM雷达一包点云数据
+//SDM lidar packet containing a single point
 struct SdkSdmPcs {
     SdkSdmHead head;
-    SdkSdmPc point; //一包数据只有单点
+    SdkSdmPc point; //Each packet contains a single point
     uint8_t cs = 0;
 };
 #define SDKSDMPCSSIZE sizeof(SdkSdmPcs)
-//SDM雷达设备信息
+//SDM lidar device information
 struct SdkSdmDeviceInfo {
-    uint8_t model = 0; //雷达型号码
-    uint8_t hv = 0; //硬件版本
-    uint8_t fvm = 0; //固件主版本
-    uint8_t fvs = 0; //固件子版本
-    uint8_t sn[SDK_SNLEN] = {0}; //序列号
+    uint8_t model = 0; //Lidar model number
+    uint8_t hv = 0; //Hardware version
+    uint8_t fvm = 0; //Firmware major version
+    uint8_t fvs = 0; //Firmware minor version
+    uint8_t sn[SDK_SNLEN] = {0}; //Serial number
 };
 #define SDKSDMDEVICEINFOSIZE sizeof(SdkSdmDeviceInfo)
 
@@ -117,7 +118,7 @@ struct SdkSdmDeviceInfo {
 
 using namespace std;
 
-namespace ydlidar 
+namespace ydlidar
 {
 
 using namespace core;
@@ -125,157 +126,157 @@ using namespace core::serial;
 using namespace core::base;
 
 /*!
-* SDM操控类
+* SDM control class
 */
-class SDMLidarDriver : public DriverInterface 
+class SDMLidarDriver : public DriverInterface
 {
 public:
-  //构造函数
+  //Constructor
   SDMLidarDriver();
-  //析构函数
+  //Destructor
   virtual ~SDMLidarDriver();
   /*!
-  * @brief 连接雷达 \n
-  * 连接成功后，必须使用::disconnect函数关闭
-  * @param[in] port 串口号
-  * @param[in] baudrate 波特率，YDLIDAR-SDM 雷达波特率：961200
-  * @return 返回连接状态
-  * @retval 0     成功
-  * @retval < 0   失败
-  * @note连接成功后，必须使用::disconnect函数关闭
-  * @see 函数::GSLidarDriver::disconnect (“::”是指定有连接功能,可以看文档里的disconnect变成绿,点击它可以跳转到disconnect.)
+  * @brief Connect to the lidar \\n
+  * After connecting successfully, close it with ::disconnect
+  * @param[in] port Serial port
+  * @param[in] baudrate   Baud rate (YDLIDAR-SDM uses 961200)
+  * @return Connection status
+  * @retval 0     Success
+  * @retval < 0   Failure
+  * @note After connecting successfully, close it with ::disconnect
+  * @see ::GSLidarDriver::disconnect ("::" marks linkable functions in the docs; click to jump there.)
   */
   result_t connect(const char *port, uint32_t baudrate);
 
   /*!
-  * @brief 断开雷达连接
+  * @brief Disconnect from the lidar
   */
   void disconnect();
 
   /*!
-  * @brief 获取当前SDK版本号 \n
-  * 静态函数
-  * @return 返回当前SKD 版本号
+  * @brief Get the current SDK version \\n
+  * Static function
+  * @return Current SDK version
   */
   virtual std::string getSDKVersion();
 
   /*!
-  * @brief lidarPortList 获取雷达端口
-  * @return 在线雷达列表
+  * @brief Retrieve the available lidar ports
+  * @return Map of detected lidars
   */
   static std::map<std::string, std::string> lidarPortList();
 
   /*!
-  * @brief 扫图状态 \n
-  * @return 返回当前雷达扫图状态
-  * @retval true     正在扫图
-  * @retval false    扫图关闭
+  * @brief Scanning status \\n
+  * @return Current scanning status
+  * @retval true     Currently scanning
+  * @retval false    Scanning stopped
   */
   bool isscanning() const;
 
   /*!
-  * @brief 连接雷达状态 \n
-  * @return 返回连接状态
-  * @retval true     成功
-  * @retval false    失败
+  * @brief Connection status \\n
+  * @return Connection status
+  * @retval true     Success
+  * @retval false    Failure
   */
   bool isconnected() const;
 
   /*!
-  * @brief 设置雷达异常自动重新连接 \n
-  * @param[in] enable    是否开启自动重连:
-  *     true	开启
-  *	  false 关闭
+  * @brief Enable automatic reconnection when the lidar encounters errors \\n
+  * @param[in] enable    Whether auto reconnection is enabled:
+  *     true    enable
+  *     false disable
   */
   void setAutoReconnect(const bool &enable);
 
   /*!
  * @brief 配置雷达地址 \n
- * @param[in] timeout  超时时间
- * @return 返回执行结果
- * @retval RESULT_OK       配置成功
- * @retval RESULT_FAILE or RESULT_TIMEOUT   配置超时
+ * @param[in] timeout  Timeout
+ * @return Execution result
+ * @retval RESULT_OK       Success
+ * @retval RESULT_FAILE or RESULT_TIMEOUT   Timeout
  */
   result_t setDeviceAddress(uint32_t timeout = DEFAULT_TIMEOUT);
 
   /*!
-  * @brief 开启扫描 \n
-  * @param[in] force    扫描模式
-  * @param[in] timeout  超时时间
-  * @return 返回执行结果
-  * @retval RESULT_OK       开启成功
-  * @retval RESULT_FAILE    开启失败
-  * @note 只用开启一次成功即可
+  * @brief Start scanning \\n
+  * @param[in] force    Scanning mode
+  * @param[in] timeout  Timeout
+  * @return Execution result
+  * @retval RESULT_OK       Start succeeded
+  * @retval RESULT_FAILE    Start failed
+  * @note A single successful start is sufficient
   */
   result_t startScan(bool force = false, uint32_t timeout = DEFAULT_TIMEOUT);
 
   /*!
-  * @brief 关闭扫描 \n
-  * @return 返回执行结果
-  * @retval RESULT_OK       关闭成功
-  * @retval RESULT_FAILE    关闭失败
+  * @brief Stop scanning \\n
+  * @return Execution result
+  * @retval RESULT_OK       Stop succeeded
+  * @retval RESULT_FAILE    Stop failed
   */
   result_t stop();
 
   /*!
-  * @brief 获取激光数据 \n
-  * @param[in] nodebuffer 激光点信息
-  * @param[in] count      一圈激光点数
-  * @param[in] timeout    超时时间
-  * @return 返回执行结果
-  * @retval RESULT_OK       获取成功
-  * @retval RESULT_FAILE    获取失败
-  * @note 获取之前，必须使用::startScan函数开启扫描
+  * @brief Retrieve laser data \\n
+  * @param[in] nodebuffer Laser point information
+  * @param[in] count      Number of points per revolution
+  * @param[in] timeout    Timeout
+  * @return Execution result
+  * @retval RESULT_OK       Retrieval succeeded
+  * @retval RESULT_FAILE    Retrieval failed
+  * @note Call ::startScan before requesting data
   */
   result_t grabScanData(node_info *nodebuffer, size_t &count,
                         uint32_t timeout = DEFAULT_TIMEOUT) ;
 
 
   /*!
-  * @brief 补偿激光角度 \n
-  * 把角度限制在0到360度之间
-  * @param[in] nodebuffer 激光点信息
-  * @param[in] count      一圈激光点数
-  * @return 返回执行结果
-  * @retval RESULT_OK       成功
-  * @retval RESULT_FAILE    失败
-  * @note 补偿之前，必须使用::grabScanData函数获取激光数据成功
+  * @brief Compensate laser angles \\n
+  * Clamp angles to 0–360 degrees
+  * @param[in] nodebuffer Laser point information
+  * @param[in] count      Number of points per revolution
+  * @return Execution result
+  * @retval RESULT_OK       Success
+  * @retval RESULT_FAILE    Failure
+  * @note Ensure ::grabScanData succeeds before applying compensation
   */
   result_t ascendScanData(node_info *nodebuffer, size_t count);
 
   /*!
-  * @brief 重置激光雷达（恢复出厂设置） \n
-  * @param[in] timeout      超时时间
-  * @return 返回执行结果
-  * @retval RESULT_OK       成功
-  * @retval RESULT_FAILE    失败
-  * @note 停止扫描后再执行当前操作, 如果在扫描中需先调用stop函数停止扫描
+  * @brief Reset the lidar (restore factory settings) \\n
+  * @param[in] timeout      Timeout
+  * @return Execution result
+  * @retval RESULT_OK       Success
+  * @retval RESULT_FAILE    Failure
+  * @note Perform this operation after stopping the scan; call stop if scanning is active
   */
   result_t reset(uint8_t addr, uint32_t timeout = DEFAULT_TIMEOUT);
 
-  //设置开启或关闭滤波功能
+  //Enable or disable filtering
   result_t enableFilter(bool yes=true);
 
-  //设置扫描频率
+  //Set scan frequency
   result_t setScanFreq(float sf, uint32_t timeout);
 
  protected:
 
   /*!
-  * @brief 创建解析雷达数据线程 \n
-  * @note 创建解析雷达数据线程之前，必须使用::startScan函数开启扫图成功
+  * @brief Create the data parsing thread \\n
+  * @note Call ::startScan successfully before creating the parsing thread
   */
   result_t createThread();
 
 
   /*!
-  * @brief 重新连接开启扫描 \n
-  * @param[in] force    扫描模式
-  * @param[in] timeout  超时时间
-  * @return 返回执行结果
-  * @retval RESULT_OK       开启成功
-  * @retval RESULT_FAILE    开启失败
-  * @note sdk 自动重新连接调用
+  * @brief Restart scanning after reconnection \\n
+  * @param[in] force    Scanning mode
+  * @param[in] timeout  Timeout
+  * @return Execution result
+  * @retval RESULT_OK       Start succeeded
+  * @retval RESULT_FAILE    Start failed
+  * @note Called automatically during SDK reconnection
   */
   result_t startAutoScan(bool force = false, uint32_t timeout = DEFAULT_TIMEOUT) ;
 
@@ -293,53 +294,53 @@ public:
    */
   result_t waitDevicePackage(uint32_t timeout = DEFAULT_TIMEOUT);
   /*!
-  * @brief 解包激光数据 \n
-  * @param[in] node 解包后激光点信息
-  * @param[in] timeout     超时时间
+  * @brief Decode lidar data \\n
+  * @param[in] node Lidar point after decoding
+  * @param[in] timeout     Timeout
   */
   result_t waitPackage(node_info *node, uint32_t timeout = DEFAULT_TIMEOUT);
 
   /*!
-  * @brief 发送数据到雷达 \n
-  * @param[in] nodebuffer 激光信息指针
-  * @param[in] count      激光点数大小
-  * @param[in] timeout      超时时间
-  * @return 返回执行结果
-  * @retval RESULT_OK       成功
-  * @retval RESULT_TIMEOUT  等待超时
-  * @retval RESULT_FAILE    失败
+  * @brief Send data to the lidar \\n
+  * @param[in] nodebuffer Pointer to lidar data
+  * @param[in] count      Number of lidar points
+  * @param[in] timeout      Timeout
+  * @return Execution result
+  * @retval RESULT_OK       Success
+  * @retval RESULT_TIMEOUT  Timed out while waiting
+  * @retval RESULT_FAILE    Failure
   */
   result_t waitScanData(node_info *nodebuffer, size_t &count,
                         uint32_t timeout = DEFAULT_TIMEOUT);
 
   /*!
-  * @brief 激光数据解析线程 \n
+  * @brief Laser data parsing thread \\n
   */
   int cacheScanData();
 
   /*!
-  * @brief 发送数据到雷达 \n
-  * @param[in] cmd 	 命名码
+  * @brief Send data to the lidar \\n
+  * @param[in] cmd     Command code
   * @param[in] payload      payload
   * @param[in] payloadsize      payloadsize
-  * @return 返回执行结果
-  * @retval RESULT_OK       成功
-  * @retval RESULT_FAILE    失败
+  * @return Execution result
+  * @retval RESULT_OK       Success
+  * @retval RESULT_FAILE    Failure
   */
   result_t sendCmd(uint8_t cmd,
                        const uint8_t *data = NULL,
                        size_t size = 0);
 
   /*!
-  * @brief 等待响应数据 \n
-  * @param[in] cmd 命令字
-  * @param[out] data 响应数据
-  * @param[in] timeout 超时时间
-  * @return 返回执行结果
-  * @retval RESULT_OK       获取成功
-  * @retval RESULT_TIMEOUT  等待超时
-  * @retval RESULT_FAILE    获取失败
-  * @note 当timeout = -1 时, 将一直等待
+  * @brief Wait for response data \\n
+  * @param[in] cmd Command code
+  * @param[out] data Response data
+  * @param[in] timeout Timeout
+  * @return Execution result
+  * @retval RESULT_OK       Retrieval succeeded
+  * @retval RESULT_TIMEOUT  Timed out while waiting
+  * @retval RESULT_FAILE    Retrieval failed
+  * @note When timeout = -1, wait indefinitely
   */
   result_t waitResp(uint8_t cmd,
                    uint32_t timeout = DEFAULT_TIMEOUT);
@@ -347,16 +348,16 @@ public:
                    std::vector<uint8_t> &data,
                    uint32_t timeout = DEFAULT_TIMEOUT);
   /*!
-  * @brief 等待激光数据包头 \n
-  * @param[out] head 包头
-  * @param[in] cmd 命令字
-  * @param[out] data 响应数据
-  * @param[in] timeout 超时时间
-  * @return 返回执行结果
-  * @retval RESULT_OK       获取成功
-  * @retval RESULT_TIMEOUT  等待超时
-  * @retval RESULT_FAILE    获取失败
-  * @note 当timeout = -1 时, 将一直等待
+  * @brief Wait for a lidar packet header \\n
+  * @param[out] head Packet header
+  * @param[in] cmd Command code
+  * @param[out] data Response data
+  * @param[in] timeout Timeout
+  * @return Execution result
+  * @retval RESULT_OK       Retrieval succeeded
+  * @retval RESULT_TIMEOUT  Timed out while waiting
+  * @retval RESULT_FAILE    Retrieval failed
+  * @note When timeout = -1, wait indefinitely
   */
   // result_t waitResHeader(SdkSdmHead *head,
   //                        uint8_t cmd,
@@ -367,48 +368,48 @@ public:
   //                        uint32_t timeout = DEFAULT_TIMEOUT);
 
   /*!
-  * @brief 等待固定数量串口数据 \n
-  * @param[in] data_count 	 等待数据大小
-  * @param[in] timeout    	 等待时间
-  * @param[in] returned_size   实际数据大小
-  * @return 返回执行结果
-  * @retval RESULT_OK       获取成功
-  * @retval RESULT_TIMEOUT  等待超时
-  * @retval RESULT_FAILE    获取失败
-  * @note 当timeout = -1 时, 将一直等待
+  * @brief Wait for a fixed amount of serial data \\n
+  * @param[in] data_count     Expected data length
+  * @param[in] timeout        Wait duration
+  * @param[in] returned_size   Actual data length
+  * @return Execution result
+  * @retval RESULT_OK       Retrieval succeeded
+  * @retval RESULT_TIMEOUT  Timed out while waiting
+  * @retval RESULT_FAILE    Retrieval failed
+  * @note When timeout = -1, wait indefinitely
   */
   result_t waitForData(size_t data_count, uint32_t timeout = DEFAULT_TIMEOUT,
                        size_t *returned_size = NULL);
 
   /*!
-  * @brief 获取串口数据 \n
-  * @param[in] data 	 数据指针
-  * @param[in] size    数据大小
-  * @return 返回执行结果
-  * @retval RESULT_OK       获取成功
-  * @retval RESULT_FAILE    获取失败
+  * @brief Retrieve data from the serial port \\n
+  * @param[in] data     Data pointer
+  * @param[in] size    Data length
+  * @return Execution result
+  * @retval RESULT_OK       Retrieval succeeded
+  * @retval RESULT_FAILE    Retrieval failed
   */
   result_t getData(uint8_t *data, size_t size);
 
   /*!
-  * @brief 串口发送数据 \n
-  * @param[in] data 	 发送数据指针
-  * @param[in] size    数据大小
-  * @return 返回执行结果
-  * @retval RESULT_OK       发送成功
-  * @retval RESULT_FAILE    发送失败
+  * @brief Send data over the serial interface \\n
+  * @param[in] data     Pointer to the data to send
+  * @param[in] size    Data length
+  * @return Execution result
+  * @retval RESULT_OK       Send succeeded
+  * @retval RESULT_FAILE    Send failed
   */
   result_t sendData(const uint8_t *data, size_t size);
   /*!
-  * @brief 关闭数据获取通道 \n
+  * @brief Disable the data acquisition channel \\n
   */
   void disableDataGrabbing();
   /*!
-  * @brief 设置串口DTR \n
+  * @brief Set the serial DTR \\n
   */
   void setDTR();
   /*!
-  * @brief 清除串口DTR \n
+  * @brief Clear the serial DTR \\n
   */
   void clearDTR();
   /*!
@@ -420,13 +421,13 @@ public:
    */
   result_t checkAutoConnecting();
   /**
-   * @brief 错误信息
+   * @brief Error information
    * @param isTCP TCP or UDP
    * @return error information
    */
   virtual const char *DescribeError(bool isTCP = false);
   /**
-   * @brief GS2雷达没有健康信息\n
+   * @brief GS2 lidar has no health information \\n
    * @return result status
    * @retval RESULT_OK success
    * @retval RESULT_FAILE or RESULT_TIMEOUT failed
@@ -443,8 +444,9 @@ public:
   virtual result_t getDeviceInfo(device_info &info, uint32_t timeout = DEFAULT_TIMEOUT);
 
 private:
-  serial::Serial *_serial = nullptr; //串口
-  std::vector<uint8_t> recvBuff; //一包数据缓存
+  ydlidar::core::Log::Logger logger; ///< Logger instance
+  serial::Serial *_serial = nullptr; //Serial interface
+  std::vector<uint8_t> recvBuff; //Packet buffer
   device_health health_;
 };
 

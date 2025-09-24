@@ -42,8 +42,13 @@ using namespace impl;
 namespace ydlidar
 {
 
-SDMLidarDriver::SDMLidarDriver() 
-    : _serial(NULL)
+SDMLidarDriver::SDMLidarDriver()
+    : _serial(NULL),
+#ifdef DEBUG_LOG
+      logger("SDMLIDAR DRV", Log::Facility::DEBUG)
+#else
+      logger("SDMLIDAR DRV", Log::Facility::INFO)
+#endif
 {
     // 串口配置参数
     m_intensities = false;
@@ -367,8 +372,8 @@ result_t SDMLidarDriver::waitResp(
             }
             if (cs != recvBuff[dataSize]) //判断校验和是否一致
             {
-                printf("[YDLIDAR] CMD CheckSum error calc[0x%02X] != src[0x%02X]\n",
-                        cs, recvBuff[dataSize]);
+                logger.error(fmt::format("CMD CheckSum error calc[0x{:X}] != src[0x{:X}]\n",
+                        cs, recvBuff[dataSize]));
                 return RESULT_FAIL;
             }
             return RESULT_OK;
@@ -488,8 +493,7 @@ int SDMLidarDriver::cacheScanData()
             {
                 if (!isAutoReconnect)
                 {
-                    fprintf(stderr, "[YDLIDAR] Exit scanning thread!\n");
-                    fflush(stderr);
+                    logger.error("Exit scanning thread!");
                     m_isScanning = false;
                     return RESULT_FAIL;
                 }
@@ -510,8 +514,7 @@ int SDMLidarDriver::cacheScanData()
             else
             {
                 timeout_count ++;
-                fprintf(stderr, "[YDLIDAR] Timeout count %d\n", timeout_count);
-                fflush(stderr);
+                logger.error(fmt::format("Timeout count {}", timeout_count));
             }
             continue;
         }
@@ -618,8 +621,8 @@ result_t SDMLidarDriver::waitPackage(node_info *node, uint32_t timeout)
             }
             if (cs != recvBuff[dataSize])
             {
-                printf("[YDLIDAR] PC CheckSum error calc[0x%02X] != src[0x%02X]\n",
-                       cs, recvBuff[dataSize]);
+                logger.error(fmt::format("PC CheckSum error calc[0x{:X}] != src[0x{:X}]\n",
+                       cs, recvBuff[dataSize]));
                 return RESULT_FAIL;
             }
             memcpy(&buff[SDKSDMHEADSIZE], recvBuff.data(), dstSize);
@@ -745,7 +748,7 @@ result_t SDMLidarDriver::startScan(bool force, uint32_t timeout)
     //启动前先设置扫描频率
     if (!IS_OK(setScanFreq(m_ScanFreq, 500)))
     {
-        printf("[YDLIDAR] Set scan frequency %.01f failed!\n", m_ScanFreq);
+        logger.error(fmt::format("Set scan frequency {:.01f} failed!", m_ScanFreq));
         return RESULT_FAIL;
     }
 
@@ -760,7 +763,7 @@ result_t SDMLidarDriver::startScan(bool force, uint32_t timeout)
             ret = waitResp(SDK_CMD_STARTSCAN, timeout);
             if (!IS_OK(ret))
             {
-                printf("[YDLIDAR] Response to start scan error!\n");
+                logger.error("Response to start scan error!");
                 return ret;
             }
         }
@@ -805,12 +808,11 @@ result_t SDMLidarDriver::createThread()
     _thread = CLASS_THREAD(SDMLidarDriver, cacheScanData);
     if (!_thread.getHandle())
     {
-        printf("[YDLIDAR] Fail to create SDM thread\n");
+        logger.error("Fail to create SDM thread");
         return RESULT_FAIL;
     }
 
-    printf("[YDLIDAR] Create SDM thread 0x%X\n", _thread.getHandle());
-    fflush(stdout);
+    logger.info(fmt::format("Create SDM thread 0x{:X}", _thread.getHandle()));
 
     return RESULT_OK;
 }

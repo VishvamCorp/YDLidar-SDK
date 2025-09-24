@@ -120,9 +120,9 @@ int main(int argc, char *argv[])
 
   int baudrate = 921600;
   std::map<int, int> baudrateList;
-  baudrateList[0] = 8000; //网络端口
-  baudrateList[1] = 921600; //串口波特率
-  baudrateList[2] = 951600; //串口波特率
+  baudrateList[0] = 8000; //Network port
+  baudrateList[1] = 921600; //Serial baud rate
+  baudrateList[2] = 951600; //Serial baud rate
   printf("Baudrate:\n");
   for (std::map<int, int>::iterator it = baudrateList.begin();
        it != baudrateList.end(); it++) {
@@ -214,10 +214,10 @@ int main(int argc, char *argv[])
   // unit: Hz
   laser.setlidaropt(LidarPropScanFrequency, &frequency, sizeof(float));
 
-  //是否启用调试
+  //Enable debug mode
   laser.setEnableDebug(true); 
 
-  //雷达初始化
+  //Initialize lidar
   bool ret = laser.initialize();
   if (!ret)
   {
@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
     fflush(stderr);
     return -1;
   }
-  //设置雷达工作模式（0表示避障模式，1或2表示沿边模式，3表示固定12Hz避障模式（需要固件支持））
+  //Set lidar work mode (0 obstacle-avoidance, 1 or 2 edge-following, 3 fixed 12 Hz obstacle avoidance [requires firmware support])
   // ret &= laser.setWorkMode(3, 0x01);
   // ret &= laser.setWorkMode(3, 0x02);
   // ret &= laser.setWorkMode(3, 0x04);
@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
   //   fflush(stderr);
   //   return -1;
   // }
-  //获取级联雷达设备信息
+  //Retrieve cascaded lidar device information
   // std::vector<device_info_ex> dis;
   // ret = laser.getDeviceInfo(dis);
   // if (!ret)
@@ -251,7 +251,7 @@ int main(int argc, char *argv[])
   //   ydlidar::core::common::printfDeviceInfo(di.di, EPT_Module);
   // }
 
-  //启动扫描
+  //Start scanning
   ret = laser.turnOn();
   if (!ret)
   {
@@ -261,11 +261,11 @@ int main(int argc, char *argv[])
   }
 
   LaserScan scan;
-  //拖尾滤波
+  //Afterimage filtering
   StrongLightFilter filter;
-  filter.setStrategy(StrongLightFilter::FS_2); //设置策略为截距法
-  filter.setMaxDist(0.025); //设置最大截距为0.025米
-  //打印帧间隔相关
+  filter.setStrategy(StrongLightFilter::FS_2); //Use intercept method strategy
+  filter.setMaxDist(0.025); //Set maximum intercept to 0.025 m
+  //Print frame interval details
   std::map<int, uint32_t> ts;
   for (int i=0; i<LIDAR_MAXCOUNT; ++i)
     ts[i] = getms();
@@ -278,7 +278,7 @@ int main(int argc, char *argv[])
        // scan.moduleNum,
        // int(scan.points.size()),
        // scan.scanFreq);
-      //打印帧间隔
+      //Print frame interval
       uint32_t t = getms();
       uint32_t dt = t - ts[scan.moduleNum];
       if (dt > 150)
@@ -286,9 +286,9 @@ int main(int argc, char *argv[])
       else
         core::common::info("module[%d] time[%lld]ms", scan.moduleNum, dt);
       ts[scan.moduleNum] = t;
-      //滤波
+      //Filter
       //filter.filter(scan, 0, 0, scan);
-      //打印点云
+      //Print point cloud
       // for (size_t i = 0; i < scan.points.size(); ++i)
       // {
       //   const LaserPoint &p = scan.points.at(i);

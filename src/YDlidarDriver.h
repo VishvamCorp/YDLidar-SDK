@@ -47,6 +47,7 @@
 #include <core/common/ydlidar_protocol.h>
 #include <core/common/DriverInterface.h>
 #include <core/common/ydlidar_help.h>
+#include <core/logger/logger.hpp>
 
 #if !defined(__cplusplus)
 #ifndef __cplusplus
@@ -171,8 +172,8 @@ class YDlidarDriver : public DriverInterface {
    */
   virtual result_t getDeviceInfo(device_info &info,
                                  uint32_t timeout = DEFAULT_TIMEOUT);
-  
-  //获取设备信息
+
+  //Retrieve device information
   virtual bool getDeviceInfoEx(device_info &info, int type=EPT_Module);
 
   /**
@@ -420,7 +421,7 @@ class YDlidarDriver : public DriverInterface {
   result_t parseResponseScanData(uint8_t *packageBuffer,
                                  uint32_t timeout = DEFAULT_TIMEOUT);
 
-  //解析时间戳数据（云鲸雷达）
+  //Parse timestamp data (Cloud Whale lidar)
   bool parseStampData(uint32_t timeout = DEFAULT_TIMEOUT / 10);
 
   /**
@@ -577,21 +578,23 @@ class YDlidarDriver : public DriverInterface {
    */
   void parseNodeFromeBuffer(node_info *node);
 
-  //解析点云数据包头
+  //Parse point cloud packet header
   result_t parseHeader(
-    uint8_t &zero, 
-    uint32_t &headPos, 
+    uint8_t &zero,
+    uint32_t &headPos,
     uint32_t timeout = DEFAULT_TIMEOUT / 2);
-  //解析点云数据并判断带不带强度信息
+  //Parse point cloud data and determine whether intensity is present
   virtual result_t getIntensityFlag();
-  //获取俯仰角值
+  //Obtain pitch angle
   virtual bool getPitchAngle(float& pitch);
 
  private:
+  ydlidar::core::Log::Logger logger; ///< Logger instance
+
   /// package sample bytes
   int PackageSampleBytes;
   /// serial port
-  ChannelDevice *_serial;
+  std::unique_ptr<ChannelDevice> _serial;
   /// sampling inteval
   uint32_t trans_delay;
   /// sampling rate
@@ -644,9 +647,9 @@ class YDlidarDriver : public DriverInterface {
   uint32_t m_heartbeat_ts;
   uint8_t m_BlockRevSize;
 
-  uint32_t m_dataPos = 0; //记录当前解析到的数据的位置（解析是否带强度信息专用）
-  uint64_t stamp = 0; //时间戳
-  bool hasStamp = true; //是否有时间戳数据
+  uint32_t m_dataPos = 0; //Track the current parsing position (used for intensity detection)
+  uint64_t stamp = 0; //Timestamp
+  bool hasStamp = true; //Whether timestamp data is available
 };
 
 }// namespace ydlidar

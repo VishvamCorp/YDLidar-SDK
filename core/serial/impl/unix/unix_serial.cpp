@@ -745,7 +745,7 @@ bool Serial::SerialImpl::open()
           return false;
       }
     }
-    // 设置为阻塞模式
+    //Switch to blocking mode
     // if (fcntl(fd_, F_SETFL, 0) == -1) {
     //     perror("fcntl error");
     //     close();
@@ -953,7 +953,7 @@ int Serial::SerialImpl::waitfordata(
   if (!isOpen())
     return -2;
 
-  if (async_) //异步
+  if (async_) //Asynchronous
   {
     size_t length = 0;
     if (returned_size == NULL) {
@@ -1038,7 +1038,7 @@ int Serial::SerialImpl::waitfordata(
         ydlidar::core::common::warn("Wait for data [%u]ms timeout", timeout);
         return -1;
       }
-      usleep(10); //等待
+      usleep(10); //Wait
     }
     if (returned_size)
       *returned_size = available();

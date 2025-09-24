@@ -9,58 +9,58 @@
 #include "core/json/cJSON.h"
 
 
-//雷达参数
+//Lidar parameters
 struct EaiLidarBaseParam
 {
-    int type = 0; //雷达类型
+    int type = 0; //Lidar type
 };
-//TIA雷达参数
+//TIA lidar parameters
 struct EaiTiaParam : public EaiLidarBaseParam
 {
-    std::string ip = "192.168.0.11"; //IP地址
-    int port = 8090; //端口号
-    std::string mask = "255.255.255.0"; //子网掩码
-    std::string gateway = "192.168.0.1"; //网关
-    std::string mac; //MAC地址
+    std::string ip = "192.168.0.11"; //IP address
+    int port = 8090; //Port number
+    std::string mask = "255.255.255.0"; //Subnet mask
+    std::string gateway = "192.168.0.1"; //Gateway
+    std::string mac; //MAC address
 
-    float scanFreq = .0f; //扫描频率，单位Hz
-    float sampleRate = .0f; //采样率，单位K/s
+    float scanFreq = .0f; //Scan frequency in Hz
+    float sampleRate = .0f; //Sampling rate in K/s
 };
-//TIA-X雷达参数
-struct EaiTiaXParamItem //项
+//TIA-X lidar parameters
+struct EaiTiaXParamItem //Entry
 {
-    float angle = 45.0f; //反射镜安装角度（单位°）
-    float dist = 30.0f; //反射镜安装距离（单位mm）
-    float opd = 0.0f; //光程差（单位mm）
-    float minAngle = 60.0f; //反射镜起始角度（单位°）
-    float maxAngle = 100.0f; //反射镜结束角度（单位°）
+    float angle = 45.0f; //Mirror mounting angle (°)
+    float dist = 30.0f; //Mirror mounting distance (mm)
+    float opd = 0.0f; //Optical path difference (mm)
+    float minAngle = 60.0f; //Mirror start angle (°)
+    float maxAngle = 100.0f; //Mirror end angle (°)
 
-    //根据参数修正角度和距离
+    //Adjust angle and distance based on parameters
     bool correct(float &angle, float &dist) const {
-        //距离无效直接返回
+        //Return immediately if the distance is invalid
         if (int(dist) <= 0)
             return false;
-        bool has = angle > SDK_ANGLE180; //超过180°的标记
-        //先判断角度值是否有效
+        bool has = angle > SDK_ANGLE180; //Flag for angles exceeding 180°
+        //Check whether the angle value is valid
         if (angle >= minAngle &&
-            angle <= maxAngle) //左反射镜
+            angle <= maxAngle) //Left mirror
         {
             if (has)
                 angle = SDK_ANGLE360 - angle;
             float beta = SDK_ANGLE180 - this->angle - angle;
-            float a = this->dist / sin(beta * M_PI / SDK_ANGLE180); //边长a
-            float b = dist - a; //边长b
-            float C = (SDK_ANGLE180 - 2 * beta) * M_PI / SDK_ANGLE180; //角C（弧度）
-            float c = sqrt(a * a + b * b - 2 * a * b * cos(C)); //边长c
-            //余弦定理计算
+            float a = this->dist / sin(beta * M_PI / SDK_ANGLE180); //Side length a
+            float b = dist - a; //Side length b
+            float C = (SDK_ANGLE180 - 2 * beta) * M_PI / SDK_ANGLE180; //Angle C (radians)
+            float c = sqrt(a * a + b * b - 2 * a * b * cos(C)); //Side length c
+            //Law of cosines calculation
             float B = acos((a * a + c * c - b * b) / (2 * a * c)) *
-                    SDK_ANGLE180 / M_PI; //角B（角度）
+                    SDK_ANGLE180 / M_PI; //Angle B (degrees)
             if (has)
                 angle = SDK_ANGLE360 - (B + angle);
             else
                 angle += B;
 
-            dist = c + this->opd; //距离增加光程差值
+            dist = c + this->opd; //Increase distance by the optical path difference
 
             return true;
         }
@@ -69,8 +69,8 @@ struct EaiTiaXParamItem //项
 };
 struct EaiTiaXParam : public EaiTiaParam
 {
-    EaiTiaXParamItem left; //左反射镜参数
-    EaiTiaXParamItem right; //右反射镜参数
+    EaiTiaXParamItem left; //Left mirror parameters
+    EaiTiaXParamItem right; //Right mirror parameters
 };
 
 namespace ydlidar {
@@ -91,165 +91,170 @@ public:
     explicit TiaLidarDriver();
     ~TiaLidarDriver();
 
-    //连接雷达
+    //Connect to the lidar
     virtual result_t connect(const char *port_path, uint32_t baudrate = 8000);
-    //错误描述
+    //Describe current error
     virtual const char *DescribeError(bool isTCP = true);
-    //断连雷达
+    //Disconnect from the lidar
     virtual void disconnect();
-    //是否在扫描状态
+    //Check if scanning
     virtual bool isscanning() const;
-    //是否在连接状态
+    //Check if connected
     virtual bool isconnected() const;
 
     /*!
-  * @brief 设置雷达是否带信号质量 \n
-  * 连接成功后，必须使用::disconnect函数关闭
-  * @param[in] isintensities    是否带信号质量:
-  *     true	带信号质量
-  *	  false 无信号质量
-  * @note只有S4B(波特率是153600)雷达支持带信号质量, 别的型号雷达暂不支持
+  * @brief Configure whether the lidar returns intensity data \n
+  * After a successful connection, close it with ::disconnect.
+  * @param[in] isintensities    Whether intensity is enabled:
+  *     true    include intensity values
+  *    false no intensity values
+  * @note Only the S4B lidar (baud rate 153600) supports intensity; other models do not.
   */
     virtual void setIntensities(const int &i);
 
     /*!
-  * @brief 设置雷达异常自动重新连接 \n
-  * @param[in] enable    是否开启自动重连:
-  *     true	开启
-  *	  false 关闭
+  * @brief Enable automatic reconnection when the lidar encounters errors \n
+  * @param[in] enable    Whether auto reconnection is enabled:
+  *     true    enable
+  *    false disable
   */
     virtual void setAutoReconnect(const bool &enable);
-    //获取雷达设备健康状态
+    //Retrieve lidar health status
     virtual result_t getHealth(
             device_health &health,
             uint32_t timeout = SDK_TIMEOUT);
-    //获取设备信息
+    //Retrieve device information
     virtual result_t getDeviceInfo(
             device_info &info,
             uint32_t timeout = SDK_TIMEOUT);
-    // //启动雷达
+    // //Start the lidar
     // virtual result_t start(
     //         bool force = false,
     //         uint32_t timeout = SDK_TIMEOUT);
-    // //停止雷达
+    // //Stop the lidar
     // virtual result_t stop();
     /*!
-  * @brief 获取激光数据 \n
-  * @param[in] nodebuffer 激光点信息
-  * @param[in] count      一圈激光点数
-  * @param[in] timeout    超时时间
-  * @return 返回执行结果
-  * @retval RESULT_OK       获取成功
-  * @retval RESULT_FAILE    获取失败
-  * @note 获取之前，必须使用::startScan函数开启扫描
+  * @brief Retrieve laser data \n
+  * @param[in] nodebuffer Laser point information
+  * @param[in] count      Number of points in one revolution
+  * @param[in] timeout    Timeout duration
+  * @return Execution result
+  * @retval RESULT_OK       Success
+  * @retval RESULT_FAILE    Failure
+  * @note Call ::startScan before attempting to fetch data
   */
     virtual result_t grabScanData(node_info *nodebuffer, size_t &count,
                                   uint32_t timeout = SDK_TIMEOUT) ;
     /*!
-  * @brief 获取激光雷达当前扫描频率 \n
-  * @param[in] frequency    扫描频率
-  * @param[in] timeout      超时时间
-  * @return 返回执行结果
-  * @retval RESULT_OK       成功
-  * @retval RESULT_FAILE    失败
-  * @note 停止扫描后再执行当前操作
+  * @brief Get the current scan frequency of the lidar \
+
+  * @param[in] frequency    Scan frequency
+  * @param[in] timeout      Timeout duration
+  * @return Execution result
+  * @retval RESULT_OK       Success
+  * @retval RESULT_FAILE    Failure
+  * @note Perform this action only after stopping the scan
   */
     virtual result_t getScanFrequency(scan_frequency &frequency,
                                       uint32_t timeout = SDK_TIMEOUT);
 
     /*!
-  * @brief 获取激光雷达当前采样频率 \n
-  * @param[in] frequency    采样频率
-  * @param[in] timeout      超时时间
-  * @return 返回执行结果
-  * @retval RESULT_OK       成功
-  * @retval RESULT_FAILE    失败
-  * @note 停止扫描后再执行当前操作
+  * @brief Get the current sampling rate of the lidar \
+
+  * @param[in] frequency    Sampling rate
+  * @param[in] timeout      Timeout duration
+  * @return Execution result
+  * @retval RESULT_OK       Success
+  * @retval RESULT_FAILE    Failure
+  * @note Perform this action only after stopping the scan
   */
     virtual result_t getSamplingRate(
             sampling_rate &rate,
             uint32_t timeout = SDK_TIMEOUT);
 
     /*!
-  * @brief 设置激光雷达当前采样频率 \n
-  * @param[in] rate    　　　采样频率
-  * @param[in] timeout      超时时间
-  * @return 返回执行结果
-  * @retval RESULT_OK       成功
-  * @retval RESULT_FAILE    失败
-  * @note 停止扫描后再执行当前操作
+  * @brief Set the current sampling rate of the lidar \
+
+  * @param[in] rate         Sampling rate
+  * @param[in] timeout      Timeout duration
+  * @return Execution result
+  * @retval RESULT_OK       Success
+  * @retval RESULT_FAILE    Failure
+  * @note Perform this action only after stopping the scan
   */
     virtual result_t setSamplingRate(
             sampling_rate &rate,
             uint32_t timeout = SDK_TIMEOUT);
 
 private:
-    //连接TCP
+    //Connect via TCP
     bool configConnect(const char *lidarIP, int tcpPort = 8090);
-    //断连TCP
+    //Disconnect TCP
     void configDisconnect();
-    //连接UDP
+    //Connect via UDP
     bool dataConnect(const char *lidarIP, int localPort = 8000);
-    //断连UDP
+    //Disconnect UDP
     void dataDisconnect();
-    //启动扫描
+    //Start scanning
     virtual result_t startScan(
             bool force = false,
             uint32_t timeout = SDK_TIMEOUT);
-    //停止扫描
+    //Stop scanning
     virtual result_t stopScan(
             uint32_t timeout = SDK_TIMEOUT);
-    //创建线程
+    //Create thread
     bool createThread();
-    //销毁线程
+    //Destroy thread
     void deleteThread();
-    //启动扫描
+    //Start automatic scanning
     result_t startAutoScan(
             bool force = false,
             uint32_t timeout = SDK_TIMEOUT);
-    //停止扫描
+    //Stop automatic scanning
     result_t stopAutoScan(
             uint32_t timeout = SDK_TIMEOUT);
 
     result_t getScanData(node_info* nodes, size_t& count);
-    //检查自动连接
+    //Check automatic reconnection
     result_t checkAutoConnecting();
 
-    //解析扫描数据线程函数
+    //Worker thread for parsing scan data
     int parseScanDataThread();
-    //定时获取转速等信息线程函数
+    //Worker thread for periodically fetching speed information
     int parseParamInfoThread();
 
-    //设置多个参数
+    //Set multiple parameters
     bool setParams(const cJSON* json);
-    //设置单个参数
+    //Set a single parameter
     bool setParam(const std::string& key, const float& value);
     bool setParam(cJSON* json);
-    //获取多个参数
+    //Fetch multiple parameters
     bool getParams(const std::string& key, cJSON* &value);
-    //发送数据
+    //Send data
     bool sendData(cJSON* json);
-    //等待响应
+    //Wait for response
     bool waitResp(cJSON* &json, uint32_t timeout = SDK_TIMEOUT);
 
 private:
-    //TIA-X修正角度和距离
+    //TIA-X angle and distance correction
     bool correct(float& a, float& d);
 
 private:
-    int m_model = YDLIDAR_TIA; //雷达型号
+    int m_model = YDLIDAR_TIA; //Lidar model
     float m_lastAngle = 0.f;
     int m_port2 = 9000;
     /* Sockets for ydlidar */
     CActiveSocket *socket_cmd = nullptr;
     CPassiveSocket *socket_data = nullptr;
-    uint8_t m_buff[TIA_PACKMAXBUFFS2]; //缓存
-    uint64_t lastZeroTime = 0; //上一零位点时间
-    uint8_t lastPackIndex = 0; //上一包包序号
-    //TIA-X专用参数
-    EaiTiaXParam m_param; //参数
-    Thread _thread2; //参数线程
-    Locker _lock2; //操作串口或网络的锁（不支持嵌套）
+    uint8_t m_buff[TIA_PACKMAXBUFFS2]; //Buffer
+    uint64_t lastZeroTime = 0; //Timestamp of the previous zero-position point
+    uint8_t lastPackIndex = 0; //Packet index of the previous frame
+    //TIA-X specific parameters
+    EaiTiaXParam m_param; //Parameters
+    Thread _thread2; //Parameter thread
+    std::thread *m_thread2 = nullptr;  // STD线程对象
+
+    Locker _lock2; //Mutex for serial or network operations (non-recursive)
 };
 
 } //ydlidar

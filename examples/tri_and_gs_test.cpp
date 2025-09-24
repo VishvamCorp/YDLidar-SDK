@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
   ydlidar::os_init();
 
   bool ret = false;
-  CYdLidar lidarGs; //GS2雷达
+  CYdLidar lidarGs; //GS2 lidar
   {
     bool isSingleChannel = false;
     float frequency = 8.0;
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
     /// unit: Hz
     lidarGs.setlidaropt(LidarPropScanFrequency, &frequency, sizeof(float));
 
-    //雷达初始化
+    //Initialize lidar
     ret = lidarGs.initialize();
     if (!ret)
     {
@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  CYdLidar lidarS2; //S2雷达
+  CYdLidar lidarS2; //S2 lidar
   {
     bool isSingleChannel = false;
     float frequency = 8.0;
@@ -167,11 +167,11 @@ int main(int argc, char *argv[])
     }
   }
 
-  LaserScan scanGs; //GS2点云数据
-  LaserScan scanS2; //S2雷达点云数据
+  LaserScan scanGs; //GS2 point cloud data
+  LaserScan scanS2; //S2 lidar point cloud data
   while (ydlidar::os_isOk())
   {
-    //启动S2
+    //Start S2
     ret = lidarS2.turnOn();
     if (!ret)
     {
@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
       fflush(stderr);
       return -1;
     }
-    //启动GS2
+    //Start GS2
     ret = lidarGs.turnOn();
     if (!ret)
     {
@@ -187,11 +187,11 @@ int main(int argc, char *argv[])
       fflush(stderr);
       return -1;
     }
-    //启动后运行5秒然后停止扫描
+    //Run for 5 seconds after startup then stop scanning
     uint64_t t = getms();
     while (getms() - t < 5000)
     {
-      //获取GS2点云数据
+      //Fetch GS2 point cloud data
       if (lidarGs.doProcessSimple(scanGs))
       {
         printf("[%lu] points module num [%d] env flag [0x%04X]\n",
@@ -205,7 +205,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Failed to get GS2 lidar data\n");
         fflush(stderr);
       }
-      //获取S2点云数据
+      //Fetch S2 point cloud data
       if (lidarS2.doProcessSimple(scanS2))
       {
         printf("[%u] points inc [%f]\n",
@@ -223,9 +223,9 @@ int main(int argc, char *argv[])
       }
     }
 
-    //停止S2
+    //Stop S2
     lidarS2.turnOff();
-    //停止GS2
+    //Stop GS2
     lidarGs.turnOff();
   }
 

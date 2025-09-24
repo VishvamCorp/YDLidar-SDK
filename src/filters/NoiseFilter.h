@@ -2,9 +2,9 @@
 #define NOISEFILTER_H
 #include "FilterInterface.h"
 
-#define MAX_INCLUDE_ANGLE 12.0f //最大夹角
-#define MAX_INCLINE_ANGLE 7.0f //最大倾斜角
-#define MIN_NOISEPOINT_COUNT 2 //最小噪点数
+#define MAX_INCLUDE_ANGLE 12.0f //Maximum included angle
+#define MAX_INCLINE_ANGLE 7.0f //Maximum inclination angle
+#define MIN_NOISEPOINT_COUNT 2 //Minimum number of noisy points
 
 
 struct FilterBlock
@@ -18,11 +18,11 @@ class YDLIDAR_API NoiseFilter : public FilterInterface
 public:
     enum FilterStrategy
     {
-        FS_Normal, //滤噪
-        FS_Tail, //旧拖尾滤波
-        FS_TailStrong, //拖尾滤波
-        FS_TailWeek, //拖尾滤波
-        FS_TailStrong2, //拖尾滤波
+        FS_Normal, //Noise suppression
+        FS_Tail, //Legacy tail filtering
+        FS_TailStrong, //Tail filtering
+        FS_TailWeek, //Tail filtering
+        FS_TailStrong2, //Tail filtering
     };
 public:
     NoiseFilter();
@@ -38,10 +38,10 @@ public:
 protected:
     void filter_noise(const LaserScan &in,
                       LaserScan &out);
-    //过滤拖尾方式1
+    //Tail filtering method 1
     void filter_tail(const LaserScan &in,
                      LaserScan &out);
-    //过滤拖尾方式2
+    //Tail filtering method 2
     void filter_tail2(const LaserScan &in,
                       LaserScan &out);
 

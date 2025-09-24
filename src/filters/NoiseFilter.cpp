@@ -18,7 +18,7 @@ NoiseFilter::~NoiseFilter()
 {
 }
 
-//计算两点连线和原点的夹角（弧度）
+//Compute the angle between the line through two points and the origin (radians)
 double NoiseFilter::calcInclineAngle(
         double reading1,
         double reading2,
@@ -28,7 +28,7 @@ double NoiseFilter::calcInclineAngle(
                  reading1 - (cos(angleBetweenReadings) * reading2));
 }
 
-//计算两点的倾斜角（弧度）
+//Compute the inclination angle between two points (radians)
 double NoiseFilter::calcTargetAngle(
         double reading1,
         double angle1,
@@ -82,7 +82,7 @@ void NoiseFilter::filter(
         int version,
         LaserScan &out)
 {
-    const LaserScan in = ins; //复制
+    const LaserScan in = ins; //Copy input
     if (FS_Normal == m_strategy)
     {
         filter_noise(in, out);
@@ -249,9 +249,9 @@ void NoiseFilter::filter_tail(
 {
 //    printf("%s\n", __FUNCTION__);
 
-    //假设激光的原点是O，对于任何两个点P1和P2，则形成角∠OP1P2，
-    //如果该角度小于最小阈值角度（min_angle）或大于最大阈值角度（max_angle），
-    //我们将该点及其附近符合条件的点移除。
+    //Assume the laser origin is O; any two points P1 and P2 form angle ∠OP1P2.
+    //If the angle is smaller than min_angle or greater than max_angle,
+    //remove the point and nearby points that meet the criteria.
 
     //range is empty
     if (in.points.empty()) {
@@ -305,7 +305,7 @@ void NoiseFilter::filter_tail(
                 bool isValid = false;
 
                 //this is a filter for false readings that do occur if one scannes over edgeds of objects
-                //如果计算的夹角超出规定的范围
+                //If the computed angle falls outside the allowed range
                 if (incline < minIncline || incline > maxIncline)
                 {
                     //mask neighbour points
@@ -319,7 +319,7 @@ void NoiseFilter::filter_tail(
                             continue;
                         }
 
-                        //如果当前点相邻N点中有偏移量较大的点则认为是噪点
+                        //If adjacent points show large deviations, classify the current point as noise
                         double offset = calcTargetOffset(in.points[i + j - 1].range,
                                 in.points[i + j - 1].angle,
                                 in.points[i + j].range,
@@ -347,7 +347,7 @@ void NoiseFilter::filter_tail(
                     inValidPointCount++;
                 }
 
-                //如果上一个夹角和当前夹角差值过大则认为是噪点
+                //If the angle difference is too large, treat it as noise
                 if (fabs(lastIncline - incline) > maxIncline - minIncline) {
                     maskedPoints[i] = true;
                 }
@@ -436,7 +436,7 @@ void NoiseFilter::filter_tail2(
         const LaserScan &in,
         LaserScan &out)
 {
-    //    LOG_DEBUG("[{}] 点数[{}]",
+    //    LOG_DEBUG("[{}] points [{}]",
     //              m_Name.toStdString().c_str(),
     //              in.points.size());
 
@@ -446,24 +446,24 @@ void NoiseFilter::filter_tail2(
         return;
     }
 
-    //1、找出连续（至少3个）点倾斜角朝向原点（极点）的点序列
-    //2、判断该点序列首尾点组成的角度范围是否在光斑对应角度范围内
-    //3、判断该点序列的强度信息是否满足约定条件（未找到规律，暂未使用）
-    //4、去掉该点序列的首尾点（首尾点是正常的）
+    //1. Identify consecutive (≥3) points whose inclination angles point toward the origin.
+    //2. Check whether the angle spanned by the sequence lies within the highlight range.
+    //3. Verify whether the intensity values meet the expected pattern (unused currently).
+    //4. Remove the first and last points of the sequence (they are considered valid).
 
-    std::vector<bool> noises; //是否为噪点的标记
-    size_t size = in.points.size(); //一圈点数
-    size_t lastIndex = 0; //上一个有效点的索引位置
-    LaserPoint lastP; //上一个点信息
-    float lastIncline = .0; //上一个倾斜角
-    float lastAngle = 90.0; //上一个夹角
-    size_t pos = 0; //标记拖尾起始点下标位置
-    //    bool hasNoise = false; //是否需要处理噪点的标志
-    size_t sizeEx = size + (size * 2 / 100 + 1); //将遍历范围扩大到原数组的102%以便处理首尾部分的点
+    std::vector<bool> noises; //Flags marking noisy points
+    size_t size = in.points.size(); //Number of points per revolution
+    size_t lastIndex = 0; //Index of the previous valid point
+    LaserPoint lastP; //Previous point information
+    float lastIncline = .0; //Previous inclination angle
+    float lastAngle = 90.0; //Previous included angle
+    size_t pos = 0; //Index marking the start of a potential tail
+    //    bool hasNoise = false; //Flag indicating whether noise needs processing
+    size_t sizeEx = size + (size * 2 / 100 + 1); //Extend the scan range to 102% to handle wrap-around points
 
     noises.resize(size, false);
 
-    //主循环函数
+    //Main processing loop
     for (size_t i = 0; i < sizeEx; ++i)
     {
         const LaserPoint& p = in.points.at(i % size);
@@ -475,7 +475,7 @@ void NoiseFilter::filter_tail2(
 
         if (i != 0)
         {
-            //计算两点连线、两点中间点到原点连线的倾斜角（弧度值）
+            //Compute the inclination (radians) of the line between two points and the line from their midpoint to the origin.
             float incline2 = calcTargetAngle(
                         lastP.range,
                         lastP.angle,
@@ -486,13 +486,13 @@ void NoiseFilter::filter_tail2(
                         (lastP.angle + p.angle) / 2.0f,
                         0.0f,
                         0.0f);
-            //转角度值
+            //Convert to degrees
             incline2 = ydlidar::core::math::to_degrees(incline2);
             incline3 = ydlidar::core::math::to_degrees(incline3);
 
             float incline = incline2;
 
-            //计算两点连线和两点中间点到原点连线的夹角
+            //Compute the angle between the line through the two points and the line from their midpoint to the origin.
             float angle = fabs(incline2 - incline3);
             if (angle > 180.0f)
                 angle = 360.0f - angle;
@@ -507,24 +507,24 @@ void NoiseFilter::filter_tail2(
             //                      qRadiansToDegrees(p.angle),
             //                      p.intensity);
 
-            //如果倾斜角变化很小则认为是一条直线上的
+            //Treat nearly unchanged inclination as points on the same line.
             if (fabs(incline - lastIncline) < maxInclineAngle)
             {
-                //如果上一个夹角不满足要求
+                //If the previous angle does not meet the criteria
                 if (fabs(lastAngle) >= maxIncludeAngle)
                 {
                     pos = 0;
                 }
-                //TODO: 需要考虑是否是最后一个点
+                //TODO: consider whether this is the last point
             }
             else
             {
-                if (fabs(lastAngle) < maxIncludeAngle) //判断上一个夹角是否满足要求
+                if (fabs(lastAngle) < maxIncludeAngle) //Check whether the previous angle meets the constraint
                 {
-                    //判断点的个数是否超过2个，超过2个才可能是拖尾噪点
+                    //At least three points are required for a tail-noise candidate
                     if (0 != pos && i - pos >= MIN_NOISEPOINT_COUNT)
                     {
-                        //统计从位置pos到i的有效点数
+                        //Count the valid points from pos to i
                         size_t validCount = 0;
                         for (size_t j=pos; j<=i; ++j)
                         {
@@ -542,9 +542,9 @@ void NoiseFilter::filter_tail2(
                     }
                     pos = 0;
                 }
-                if (0 == pos && fabs(angle) < maxIncludeAngle) //判断当前夹角是否满足要求
+                if (0 == pos && fabs(angle) < maxIncludeAngle) //Check whether the current angle meets the constraint
                 {
-                    //疑似拖尾点，标记
+                    //Mark as suspected tail noise
                     pos = lastIndex;
                 }
                 else
@@ -561,7 +561,7 @@ void NoiseFilter::filter_tail2(
         lastP = p;
     }
 
-    //处理被标记的点
+    //Process points that were marked as noise
     size_t noiseCount = 0;
     for (size_t i = 0; i < size; ++i)
     {

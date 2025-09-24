@@ -50,9 +50,9 @@ using namespace ydlidar::core::common;
 int main(int argc, char *argv[])
 {
   printLogo();
-  //初始化
+  //Initialize
   os_init();
-  //初始化串口号
+  //Initialize serial port name
   std::string port;
   std::map<std::string, std::string> ports = ydlidar::lidarPortList();
   std::map<std::string, std::string>::iterator it;
@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  int baudrate = 460800; //默认串口号
+  int baudrate = 460800; //Default serial port
 
   bool isSingleChannel = false;
   
@@ -172,14 +172,14 @@ int main(int argc, char *argv[])
   float frequency = 250.0;
   laser.setlidaropt(LidarPropScanFrequency, &frequency, sizeof(float));
 
-  // 雷达初始化
+  // Initialize lidar
   bool ret = laser.initialize();
   if (!ret)
   {
     fprintf(stderr, "[YDLIDAR] Fail to initialize %s\n", laser.DescribeError());
     return -1;
   }
-  // 启动扫描
+  // Start scanning
   ret = laser.turnOn();
   if (!ret)
   {

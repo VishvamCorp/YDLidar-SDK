@@ -60,11 +60,11 @@ int main(int argc, char *argv[])
   std::string port;
   ydlidar::os_init();
 
-  // 让用户选择IP或者手动输入IP
+  // Let the user select an IP or enter one manually
   {
-    // 命令TCP 192.168.0.11 8090
-    // 点云UDP 8000
-    // 广播UDP 7777
+    // Command TCP 192.168.0.11 8090
+    // Point cloud UDP 8000
+    // Broadcast UDP 7777
     std::map<std::string, std::string> ports;
     std::map<std::string, std::string>::iterator it;
     ports["IP1"] = "192.168.0.11";
@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
       std::cin >> port;
     }
 
-  //串口
+  // Serial port
   // ports = ydlidar::lidarPortList();
   // if (ports.size() == 1)
   // {
@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
   /// unit: Hz
   laser.setlidaropt(LidarPropScanFrequency, &frequency, sizeof(float));
 
-  // laser.setEnableDebug(true); //启用调试
+  // laser.setEnableDebug(true); //Enable debugging
 
   /// initialize SDK and LiDAR.
   bool ret = laser.initialize();
@@ -256,16 +256,16 @@ int main(int argc, char *argv[])
 
   LaserScan scan;
   LaserScan outScan;
-  StrongLightFilter filter; //拖尾滤波器
-  filter.setMaxDist(0.1); //最大距离阈值
-  filter.setMaxAngle(12.0); //最大角度阈值
-  filter.setMinNoise(2); //最小连续噪点数
+  StrongLightFilter filter; //Afterimage filter
+  filter.setMaxDist(0.1); //Maximum distance threshold
+  filter.setMaxAngle(12.0); //Maximum angle threshold
+  filter.setMinNoise(2); //Minimum consecutive noise points
 
   float minScanTime = 1.0f / (frequency + 2.5);
   float maxScanTime = 1.0f / (frequency - 2.5);
   while (ret && ydlidar::os_isOk())
   {
-    //循环获取点云数据
+    //Continuously fetch point cloud data
     if (laser.doProcessSimple(scan))
     {
       // if (scan.config.scan_time < minScanTime ||
@@ -288,7 +288,7 @@ int main(int argc, char *argv[])
       // }
       // fflush(stdout);
 
-      // 使用强光滤波器
+      // Apply the strong light filter
       // filter.filter(scan, 0, 0, outScan);
     }
     else

@@ -337,7 +337,7 @@ int main(int argc, char *argv[])
   {
     if (laser.doProcessSimple(scan))
     {
-      printf("Scan received [%llu] points stamp [%llu]\n",
+      printf("Scan received [%lu] points stamp [%lu]\n",
              scan.points.size(),
              scan.stamp);
       // for (size_t i = 0; i < scan.points.size(); ++i)

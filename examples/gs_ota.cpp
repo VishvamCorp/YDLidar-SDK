@@ -128,8 +128,8 @@ int main(int argc, char *argv[])
 
   int baudrate = 921600;
   std::map<int, int> baudrateList;
-  baudrateList[0] = 8000;   // 网络端口
-  baudrateList[1] = 921600; // 串口波特率
+  baudrateList[0] = 8000;   //Network port
+  baudrateList[1] = 921600; //Serial baud rate
   printf("Baudrate:\n");
   for (std::map<int, int>::iterator it = baudrateList.begin();
        it != baudrateList.end(); it++)
@@ -224,12 +224,12 @@ int main(int argc, char *argv[])
   /// unit: Hz
   laser.setlidaropt(LidarPropScanFrequency, &frequency, sizeof(float));
 
-  //设置OTA文件路径
+  //Set OTA file path
   laser.setOtaFile("./EAI_GS2_SCM_GD32_APP_031_1_20221111.bin");
-  //启用加密
+  //Enable encryption
   laser.setOtaEncode(true);
 
-  // 雷达初始化
+  // Initialize lidar
   bool ret = laser.initialize();
   if (!ret)
   {
@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
     return -1;
   }
 
-  //开始OTA升级
+  //Start OTA upgrade
   if (!laser.ota())
   {
     fprintf(stderr, "Fail to ota\n");

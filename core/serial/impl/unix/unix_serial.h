@@ -37,7 +37,7 @@ class Serial::SerialImpl {
 
   virtual ~SerialImpl();
 
-  bool open(); //打开
+  bool open(); //Open
 
   Serial::SerialPortError getSystemError(int systemErrorCode) const;
 
@@ -136,7 +136,7 @@ class Serial::SerialImpl {
   bool is_open_;
   bool xonxoff_;
   bool rtscts_;
-  bool async_ = true; //异步标记
+  bool async_ = true; //Asynchronous flag
 
   Timeout timeout_;           // Timeout for read operations
   unsigned long baudrate_;    // Baudrate

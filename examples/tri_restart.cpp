@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 
   bool ret = false;
  
-  CYdLidar lidarS2; //S2雷达
+  CYdLidar lidarS2; //S2 lidar
   {
     bool isSingleChannel = false;
     float frequency = 8.0;
@@ -90,8 +90,8 @@ int main(int argc, char *argv[])
     lidarS2.setlidaropt(LidarPropScanFrequency, &frequency, sizeof(float));
   }
 
-  LaserScan scanGs; //GS2点云数据
-  LaserScan scanS2; //S2雷达点云数据
+  LaserScan scanGs; //GS2 point cloud data
+  LaserScan scanS2; //S2 lidar point cloud data
   while (ydlidar::os_isOk())
   {
     ret = lidarS2.initialize();
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
       fflush(stderr);
       return -1;
     }
-    //启动S2
+    //Start S2
     ret = lidarS2.turnOn();
     if (!ret)
     {
@@ -109,11 +109,11 @@ int main(int argc, char *argv[])
       fflush(stderr);
       return -1;
     }
-    //启动后运行5秒然后停止扫描
+    //Run for 5 seconds after startup then stop scanning
     uint64_t t = getms();
     while (getms() - t < 5000)
     {
-      //获取S2点云数据
+      //Fetch S2 point cloud data
       if (lidarS2.doProcessSimple(scanS2))
       {
         printf("[%u] points inc [%f]\n",
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
       }
     }
 
-    //停止S2
+    //Stop S2
     lidarS2.turnOff();
   }
 

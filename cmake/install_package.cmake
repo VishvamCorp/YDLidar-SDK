@@ -4,7 +4,7 @@
 #   "FindXXX.cmake" mechanism or with pkg-config.  This makes your code boradly
 #   compatible with traditional unix best practices, and also easy to use from
 #   other CMake projets.
-# 
+#
 # This function will create and install a ${PACKAGE}.pc pkg-config file.
 # Will also create a Find${PACKAGE}.cmake, which will in turn call.
 
@@ -29,13 +29,13 @@ get_filename_component(modules_dir ${CMAKE_CURRENT_LIST_FILE} PATH)
 function(install_package)
   set(PACKAGE_OPTIONS "")
   set(PACKAGE_SINGLE_ARGS "")
-  set( PACKAGE_MULTI_ARGS 
-      PKG_NAME 
-      LIB_NAME 
+  set( PACKAGE_MULTI_ARGS
+      PKG_NAME
+      LIB_NAME
       VERSION
       DESCRIPTION
-      INSTALL_HEADERS 
-      INSTALL_GENERATED_HEADERS 
+      INSTALL_HEADERS
+      INSTALL_GENERATED_HEADERS
       INSTALL_HEADER_DIRS
       INSTALL_INCLUDE_DIR
       DESTINATION
@@ -59,7 +59,7 @@ function(install_package)
   mark_as_advanced( EXPORT_${PROJECT_NAME} )
 
 
-  # clean things up 
+  # clean things up
   if( PACKAGE_LINK_DIRS )
     list( REMOVE_DUPLICATES PACKAGE_LINK_DIRS )
   endif()
@@ -76,7 +76,7 @@ function(install_package)
     set( PACKAGE_CFLAGS "${PACKAGE_CFLAGS} -I${var}" )
   endforeach()
 
-  # now construct Libs.private arguments 
+  # now construct Libs.private arguments
   foreach(var IN LISTS PACKAGE_LINK_DIRS )
     set( PACKAGE_LIBS "${PACKAGE_LIBS} -L${var}" )
   endforeach()
@@ -93,7 +93,7 @@ function(install_package)
     set( PACKAGE_CFLAGS ${PACKAGE_CXXFLAGS} )
   endif()
 
-  # In case we want to install. 
+  # In case we want to install.
   if( NOT EXPORT_${PROJECT_NAME} )
         # add "installed" library to list of required libraries to link against
         if( PACKAGE_LIB_NAME )
@@ -108,7 +108,7 @@ function(install_package)
         if( PACKAGE_INSTALL_HEADER_DIRS )
             foreach(dir IN LISTS PACKAGE_INSTALL_HEADER_DIRS )
             install( DIRECTORY ${dir}
-                DESTINATION ${PACKAGE_DESTINATION}/include 
+                DESTINATION ${PACKAGE_DESTINATION}/include
                 FILES_MATCHING PATTERN "*.h|*.hxx|*.hpp"
                 )
             endforeach()
@@ -151,20 +151,20 @@ function(install_package)
             install( FILES ${_target_library} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
             set( PACKAGE_LIB_LINK "-l${PACKAGE_LIB_NAME}" )
         endif()
-    
+
         # build pkg-config file
         if( PACKAGE_PKG_NAME )
             configure_file( ${modules_dir}/PkgConfig.pc.in ${PACKAGE_PKG_NAME}.pc @ONLY )
-        
+
         # install pkg-config file for external projects to discover this library
-            install( FILES ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE_PKG_NAME}.pc 
+            install( FILES ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE_PKG_NAME}.pc
                 DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig/ )
-        
+
         #######################################################
         # Export library for easy inclusion from other cmake projects. APPEND allows
         # call to function even as subdirectory of larger project.
         FILE(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
-        export( TARGETS ${LIBRARY_NAME}
+        export( TARGETS ${PACKAGE_LIB_NAME}
         APPEND FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake" )
 
         if("${SDK_SOURCE_DIR}" STREQUAL "")
@@ -188,12 +188,15 @@ function(install_package)
         endif()
 
 
+        install(EXPORT ${PROJECT_NAME}Targets
+            DESTINATION lib/cmake/${PROJECT_NAME}
+            FILE ${PROJECT_NAME}Targets.cmake)
+
+        # Install config and version files
         install(FILES
             ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-            ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake
             ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-            DESTINATION
-            lib/cmake/${PROJECT_NAME})
+            DESTINATION lib/cmake/${PROJECT_NAME})
 
         install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Find${PACKAGE_PKG_NAME}.cmake
             DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${PACKAGE_PKG_NAME}/ )
@@ -248,7 +251,7 @@ function(install_package)
   # Export library for easy inclusion from other cmake projects. APPEND allows
   # call to function even as subdirectory of larger project.
   FILE(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
-  export( TARGETS ${LIBRARY_NAME}
+  export( TARGETS ${PACKAGE_LIB_NAME}
       APPEND FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake" )
 
   export( PACKAGE ${PROJECT_NAME} )
@@ -291,6 +294,6 @@ endif()
   # NB: this .cmake file CANNOT refer to any source directory, only to
   # _installed_ files.
   configure_file( ${modules_dir}/FindPackage.cmake.in Find${PACKAGE_PKG_NAME}.cmake @ONLY )
-    
+
 endfunction()
 

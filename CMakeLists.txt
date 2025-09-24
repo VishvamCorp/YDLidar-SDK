@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.25)
 project(ydlidar_sdk C CXX)
 
 #########################################################
@@ -16,8 +16,23 @@ ELSE()
 	SET(CMAKE_MRPT_WORD_SIZE 32)
 ENDIF()
 ##################################################
-# Add c++11 Flag
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+# Set C++ standard
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Set C standard
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
+include(FetchContent)
+
+FetchContent_Declare(
+  fmt
+  GIT_REPOSITORY https://github.com/fmtlib/fmt
+  GIT_TAG        12.0.0)
+
+FetchContent_MakeAvailable(fmt)
 
 ##########################################################
 IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
@@ -38,6 +53,12 @@ ELSEIF (CMAKE_SYSTEM_NAME MATCHES "Windows")
 ENDIF (CMAKE_SYSTEM_NAME MATCHES "Linux")
 #or
 #set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+# Debug builds: enable sanitizers for critical runtime checks
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_options(-ggdb -fsanitize=leak -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=leak -fsanitize=address -fsanitize=undefined)
+endif()
 
 #####################################################
 # add cmake module path
@@ -120,8 +141,24 @@ else()
 ydlidar_add_library(${PROJECT_NAME} STATIC ${SDK_SOURCES} ${SDK_HEADERS} ${GENERATED_HEADERS})
 endif()
 
-target_link_libraries(${PROJECT_NAME} ${SDK_LIBS})
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${SDK_LIBS} fmt::fmt)
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+        $<INSTALL_INTERFACE:include>
+)
+
+# Add install command for the library with EXPORT
+install(TARGETS ${PROJECT_NAME}
+    EXPORT ${PROJECT_NAME}Targets
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include)
+
+if(TARGET fmt)
+    install(TARGETS fmt EXPORT ${PROJECT_NAME}Targets)
+endif()
 
 #############################################################################################
 #static library
@@ -147,7 +184,7 @@ if(${SWIG_FOUND} AND ${PYTHONLIBS_FOUND})
 endif()
 
 ##############################################
-# build ydlidar sdk c# 
+# build ydlidar sdk c#
 if(WIN32)
 if(BUILD_CSHARP)
     message(STATUS "build csharp API....")

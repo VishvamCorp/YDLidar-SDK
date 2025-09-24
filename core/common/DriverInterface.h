@@ -301,7 +301,7 @@ namespace ydlidar
           bool force = false,
           uint32_t timeout = DEFAULT_TIMEOUT) {
             UNUSED(force);
-            UNUSED(timeout); 
+            UNUSED(timeout);
             return RESULT_FAIL;
           }
 
@@ -490,16 +490,16 @@ namespace ydlidar
          * @param[in] addr 雷达地址
          * @return 成功返回RESULT_OK，否则返回非RESULT_OK
          */
-        virtual result_t setWorkMode(int mode = 0, uint8_t addr = 0x00) { 
-          return RESULT_FAIL; 
+        virtual result_t setWorkMode(int mode = 0, uint8_t addr = 0x00) {
+          return RESULT_FAIL;
         }
 
         /**
          * @brief 解析点云数据并判断带不带强度信息（目前只针对三角雷达）
          * @return 成功返回RESULT_OK，否则返回非RESULT_OK
          */
-        virtual result_t getIntensityFlag() { 
-          return RESULT_OK; 
+        virtual result_t getIntensityFlag() {
+          return RESULT_OK;
         }
 
         //获取俯仰角值
@@ -601,8 +601,8 @@ namespace ydlidar
         Locker _lock;
         /// Parse Data thread
         Thread _thread; //线程对象
-        std::thread* m_thread = nullptr; //STD线程对象
-        std::thread* m_thread2 = nullptr; //STD线程对象
+        std::thread m_thread; //STD线程对象
+
         /// command locker（不支持嵌套）
         Locker _cmd_lock;
         /// driver error locker（不支持嵌套）

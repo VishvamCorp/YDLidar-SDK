@@ -10,7 +10,7 @@
 *                                                                            *
 *  @author   Tony.Yang                                                       *
 *  @email    chushuifurong618@eaibot.com                                     *
-*  @version  1.0.0(版本号)                                                    *
+*  @version  1.0.0 (version number)                                          *
 *  @date     chushuifurong618@eaibot.com                                     *
 *                                                                            *
 *                                                                            *
@@ -1275,4 +1275,3 @@ result_t ETLidarDriver::getScanData() {
   return RESULT_OK;
 
 }
-

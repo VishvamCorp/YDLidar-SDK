@@ -48,7 +48,12 @@ using namespace ydlidar::core::math;
 /*-------------------------------------------------------------
             Constructor
 -------------------------------------------------------------*/
-CYdLidar::CYdLidar() : lidarPtr(nullptr)
+CYdLidar::CYdLidar() : lidarPtr(nullptr),
+#ifdef DEBUG_LOG
+      logger("YDLIDAR", Log::Facility::DEBUG)
+#else
+      logger("YDLIDAR", Log::Facility::INFO)
+#endif
 {
   m_SerialPort = "/dev/ydlidar";
   m_SerialBaudrate = 230400;
@@ -418,18 +423,18 @@ bool CYdLidar::initialize()
   uint32_t t = getms();
   if (!checkConnect())
   {
-    error("Error initializing YDLIDAR check Comms.");
+    logger.error("Error initializing YDLIDAR check Comms.");
     return false;
   }
 
   if (!checkStatus())
   {
-    error("Error initializing YDLIDAR check status under [%s] and [%d].",
-            m_SerialPort.c_str(), m_SerialBaudrate);
+    logger.error(fmt::format("Error initializing YDLIDAR check status under [{}] and [{}].",
+            m_SerialPort.c_str(), m_SerialBaudrate));
     return false;
   }
 
-  info("Lidar init success, Elapsed time [%u]ms", getms() - t);
+  logger.info(fmt::format("Lidar init success, Elapsed time [{}]ms", getms() - t));
   return true;
 }
 
@@ -443,15 +448,15 @@ void CYdLidar::GetLidarVersion(LidarVersion &lv)
   std::string sn;
   for (int i = 0; i < SDK_SNLEN; i++)
     sn += char(lv.sn[i] + 48);
-  info("Lidar version\n"
-        "Firmware version: %u.%u.%u\n"
-        "Hardware version: %u\n"
-        "Serial: %s",
+  logger.info(fmt::format("Lidar version\n"
+        "\tFirmware version: {}.{}.{}\n"
+        "\tHardware version: {}\n"
+        "\tSerial: {}",
         lv.soft_major,
         lv.soft_minor,
         lv.soft_patch,
         lv.hardware,
-        sn.c_str());
+        sn));
 }
 
 /*-------------------------------------------------------------
@@ -471,22 +476,22 @@ bool CYdLidar::turnOn()
     if (!IS_OK(ret))
     {
       lidarPtr->stop();
-      error("Failed to start scan mode %d", ret);
+      logger.error(fmt::format("Failed to start scan mode {}", ret));
       return false;
     }
   }
-  info("Successed to start scan mode, Elapsed time %u ms", getms() - t);
+  logger.info(fmt::format("Successed to start scan mode, Elapsed time {} ms", getms() - t));
 
   t = getms();
   //计算采样率
   if (!checkLidarAbnormal())
   {
     lidarPtr->stop();
-    error("Failed to turn on the Lidar, because the lidar is [%s].",
-            DriverInterface::DescribeDriverError(lidarPtr->getDriverError()));
+    logger.error(fmt::format("Failed to turn on the Lidar, because the lidar is [{}].",
+            DriverInterface::DescribeDriverError(lidarPtr->getDriverError())));
     return false;
   }
-  info("Successed to check the lidar, Elapsed time %u ms", getms() - t);
+  logger.info(fmt::format("Successed to check the lidar, Elapsed time {} ms", getms() - t));
 
   m_field_of_view = 360.f;
   //网络TOF雷达需要设置视场角
@@ -509,7 +514,7 @@ bool CYdLidar::turnOn()
   m_AllNode = 0;
   m_PointTime = lidarPtr->getPointTime();
   lidarPtr->setAutoReconnect(m_AutoReconnect);
-  info("Now lidar is scanning...");
+  logger.info("Now lidar is scanning...");
 
   lastStamp = 0;
   //重置错误
@@ -665,7 +670,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
     {
       const node_info& node = global_nodes[i];
 
-      // printf("%lu a:%.01f d:%u\n", 
+      // printf("%lu a:%.01f d:%u\n",
       //   i, float(node.angle) / 128.0f, node.dist);
 
       if (isNetTOFLidar(m_LidarType))
@@ -692,7 +697,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
       }
       else
       {
-        if (isTOFLidar(m_LidarType) || 
+        if (isTOFLidar(m_LidarType) ||
           isNetTOFLidar(m_LidarType) ||
           isGSLidar(m_LidarType) ||
           isSDMLidar(m_LidarType) ||
@@ -785,7 +790,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
       if (count > all_node_count)
       {
         //如果点过多则直接删除多余的点并打印警告
-        warn("[YDLIDAR]: Real point count %lu > fixed point count %d", count, all_node_count);
+        logger.warning(fmt::format("Real point count {} > fixed point count {}", count, all_node_count));
       	outscan.points.resize(all_node_count);
       }
       else
@@ -809,9 +814,9 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
   }
   else
   {
-    error("[YDLIDAR]: %d %s\n",
+    logger.error(fmt::format("{} {}",
       op_result,
-      DriverInterface::DescribeDriverError(lidarPtr->getDriverError()));
+      DriverInterface::DescribeDriverError(lidarPtr->getDriverError())));
 
     m_AllNode = 0;
     m_FristNodeTime = tim_scan_start;
@@ -828,7 +833,7 @@ bool CYdLidar::turnOff()
   if (lidarPtr)
   {
     if (lidarPtr->isscanning())
-      info("Now lidar scanning has stopped!");
+      logger.info("Now lidar scanning has stopped!");
     lidarPtr->stop();
   }
 
@@ -914,7 +919,7 @@ bool CYdLidar::getUserVersion(std::string &version)
 {
     if (!checkHardware())
     {
-        error("Device is not open!");
+        logger.error("Device is not open!");
         return false;
     }
 
@@ -1043,7 +1048,7 @@ bool CYdLidar::getDeviceInfoByPackage(const LaserDebug &debug)
                     resample
 -------------------------------------------------------------*/
 void CYdLidar::resample(
-  int frequency, int count, 
+  int frequency, int count,
   uint64_t tim_scan_end,
   uint64_t tim_scan_start)
 {
@@ -1094,12 +1099,12 @@ bool CYdLidar::checkLidarAbnormal()
 
   result_t ret = RESULT_FAIL;
   std::vector<int> data;
-  
+
   while (checkCount < m_AbnormalCheckCount)
   {
     // printf("checkLidarAbnormal %d\n", checkCount);
 
-    // Ensure that the voltage is insufficient or the motor resistance is high, 
+    // Ensure that the voltage is insufficient or the motor resistance is high,
     //causing an abnormality.
     if (checkCount)
       delay(500);
@@ -1121,7 +1126,7 @@ bool CYdLidar::checkLidarAbnormal()
       ret = lidarPtr->grabScanData(global_nodes, count);
       end_time = getTime();
       scan_time = 1.0 * static_cast<int64_t>(end_time - start_time) / 1e9;
-      
+
       if (IS_OK(ret))
       {
         // 获取CT信息
@@ -1176,8 +1181,8 @@ bool CYdLidar::checkLidarAbnormal()
       int total = accumulate(data.begin(), data.end(), 0);
       int mean = total / data.size(); // mean value
       m_FixedSize = (static_cast<int>((mean + 5) / 10)) * 10;
-      info("Single Fixed Size: %d", m_FixedSize);
-      info("Sample Rate: %.02fK", m_SampleRate);
+      logger.info(fmt::format("Single Fixed Size: {}", m_FixedSize));
+      logger.info(fmt::format("Sample Rate: {:.02f}K", m_SampleRate));
       return true;
     }
 
@@ -1307,11 +1312,11 @@ bool CYdLidar::calcSampleRate(int count, double scan_time)
     if (!m_SingleChannel)
       //通过增加采样率值来增加点数，以免计算出的点数不够导致缺点
       m_FixedSize = (m_SampleRate + 0.3) * 1000 / m_ScanFrequency;
-    
-    info("Scan Frequency: %.02fHz", m_ScanFrequency);
+
+    logger.info(fmt::format("Scan Frequency: {:.02f}Hz", m_ScanFrequency));
     if (!isSDMLidar(m_LidarType)) //非SDM雷达才打印Fixed Size
-      info("Fixed Size: %d", m_FixedSize);
-    info("Sample Rate: %.02fK", m_SampleRate);
+      logger.info(fmt::format("Fixed Size: {}", m_FixedSize));
+    logger.info(fmt::format("Sample Rate: {:.02f}K", m_SampleRate));
   }
 
   return ret;
@@ -1335,13 +1340,13 @@ bool CYdLidar::getDeviceHealth()
 
   if (IS_OK(ret))
   {
-    info("Lidar running correctly! The health status %s",
-      healthinfo.status == 0 ? "good" : "bad");
+    logger.info(fmt::format("Lidar running correctly! The health status {}",
+      healthinfo.status == 0 ? "good" : "bad"));
+
     if (healthinfo.status == 2)
     {
-      error("Error, Lidar internal error[0x%X] detected. "
-            "Please reboot the device to retry.", 
-        healthinfo.error_code);
+      logger.error(fmt::format("Error, Lidar internal error[0x{:X}] detected. "
+            "Please reboot the device to retry.", static_cast<uint32_t>(healthinfo.error_code)));
       return false;
     }
     else
@@ -1351,7 +1356,7 @@ bool CYdLidar::getDeviceHealth()
   }
   else
   {
-    error("Error, cannot retrieve Lidar health code %d", ret);
+    logger.error(fmt::format("Error, cannot retrieve Lidar health code {}", ret));
     return false;
   }
 }
@@ -1371,14 +1376,14 @@ bool CYdLidar::getDeviceInfo()
     DriverInterface::DEFAULT_TIMEOUT / 2);
   if (!IS_OK(op_result))
   {
-    error("Fail to get baseplate device information!");
+    logger.warning("Fail to get baseplate device information!");
     return false;
   }
 
   if (!isSupportLidar(di.model))
   {
-    error("Current SDK does not support current lidar model [%s]",
-      lidarModelToString(di.model).c_str());
+    logger.error(fmt::format("Current SDK does not support current lidar model [{}]",
+      lidarModelToString(di.model).c_str()));
     return false;
   }
 
@@ -1387,7 +1392,7 @@ bool CYdLidar::getDeviceInfo()
   {
     if (!isTOFLidar(m_LidarType))
     {
-      error("Incorrect Lidar Type setting...");
+      logger.error("Incorrect Lidar Type setting...");
       m_LidarType = TYPE_TOF;
       lidarPtr->setLidarType(m_LidarType);
     }
@@ -1407,7 +1412,7 @@ bool CYdLidar::getDeviceInfo()
 
   frequencyOffset = 0.4;
   lidar_model = di.model;
-  info("Current Lidar Model Code %d", lidar_model);
+  logger.info(fmt::format("Current Lidar Model Code {}", lidar_model));
   // bool intensity = hasIntensity(di.model);
     // intensity = m_Intensity;
       // lidarPtr->setIntensities(intensity);
@@ -1463,8 +1468,8 @@ bool CYdLidar::getDeviceInfo()
 
   // printf("LIDAR get device info finished, Elapsed time %u ms\n", getms() - t);
   //检查转速
-  if (hasScanFrequencyCtrl(di.model) || 
-    ((isTOFLidar(m_LidarType)) && !m_SingleChannel) || 
+  if (hasScanFrequencyCtrl(di.model) ||
+    ((isTOFLidar(m_LidarType)) && !m_SingleChannel) ||
       isNetTOFLidar(m_LidarType))
   {
     checkScanFrequency();
@@ -1522,7 +1527,7 @@ void CYdLidar::handleSingleChannelDevice()
   lidar_model = di.model;
   // defalutSampleRate = getDefaultSampleRate(devinfo.model);
 
-  info("Single channel current sampling rate: %.02fK", m_SampleRate);
+  logger.info(fmt::format("Single channel current sampling rate: {:.02f}K", m_SampleRate));
   return;
 }
 
@@ -1538,7 +1543,7 @@ void CYdLidar::checkSampleRate()
   result_t ret = lidarPtr->getSamplingRate(_rate);
   if (IS_OK(ret))
   {
-    info("Origin sample rate code: %u", _rate.rate);
+    logger.info(fmt::format("Origin sample rate code: {}", _rate.rate));
     if (!isTOFLidarByModel(lidar_model))
     {
       //非TG系列雷达获取采样率码转成采样率值
@@ -1564,7 +1569,7 @@ void CYdLidar::checkSampleRate()
     m_SampleRate = sr;
     defalutSampleRate.clear();
     defalutSampleRate.push_back(m_SampleRate);
-    info("Current sample rate: %.02fK", m_SampleRate);
+    logger.info(fmt::format("Current sample rate: {:.02f}K", m_SampleRate));
   }
 }
 
@@ -1586,7 +1591,7 @@ bool CYdLidar::checkScanFrequency()
       if (isTOFLidar(m_LidarType)) //TG雷达转速虚高0.4需要减去还原真实转速
         frequency -= 0.4;
       hz = m_ScanFrequency - frequency;
-      info("Current scan frequency: %.02fHz", frequency);
+      logger.info(fmt::format("Current scan frequency: {:.02f}Hz", frequency));
       if (hz > 0)
       {
         //大调速
@@ -1625,8 +1630,7 @@ bool CYdLidar::checkScanFrequency()
   else
   {
     // m_ScanFrequency += frequencyOffset;
-    error("Current scan frequency[%f] is out of range.",
-      m_ScanFrequency);
+    logger.error(fmt::format("Current scan frequency[{}] is out of range.", m_ScanFrequency));
   }
 
   ans = lidarPtr->getScanFrequency(_scan_frequency);
@@ -1647,8 +1651,8 @@ bool CYdLidar::checkScanFrequency()
 
   // m_ScanFrequency -= frequencyOffset;
   m_FixedSize = m_SampleRate * 1000 / (m_ScanFrequency - 0.1);
-  info("Current scan frequency: %.02fHz", m_ScanFrequency);
-  // info("Fixed size: %d", m_FixedSize);
+  logger.info(fmt::format("Current scan frequency: {:.02f}Hz", m_ScanFrequency));
+
   return true;
 }
 
@@ -1714,17 +1718,18 @@ bool CYdLidar::checkCalibrationAngle(const std::string &serialNumber)
       m_isAngleOffsetCorrected = (angle.angle != 180 * zero_offset_angle_scale);
       m_AngleOffset = angle.angle / zero_offset_angle_scale;
       ret = true;
-      info("Successfully obtained the %s offset angle[%f] from the lidar[%s]", 
-        m_isAngleOffsetCorrected ? "corrected" : "uncorrrected", m_AngleOffset,
-        serialNumber.c_str());
+      logger.info(fmt::format("Successfully obtained the {} offset angle[{}] from the lidar[{}]",
+        m_isAngleOffsetCorrected ? "corrected" : "uncorrrected", m_AngleOffset, serialNumber));
+
       return ret;
     }
 
     retry++;
   }
 
-  info("Current %s AngleOffset : %f°",
-    m_isAngleOffsetCorrected ? "corrected" : "uncorrrected", m_AngleOffset);
+  logger.info(fmt::format("Current {} AngleOffset : {}°",
+    m_isAngleOffsetCorrected ? "corrected" : "uncorrrected", m_AngleOffset));
+
   return ret;
 }
 
@@ -1734,39 +1739,38 @@ bool CYdLidar::checkCalibrationAngle(const std::string &serialNumber)
 bool CYdLidar::checkConnect()
 {
   //如果雷达类型有变化则需要先删除旧对象
-  if (lidarPtr && 
+  if (lidarPtr &&
     lidarPtr->getLidarType() != m_LidarType)
   {
-    delete lidarPtr;
-    lidarPtr = nullptr;
+      lidarPtr.reset();
   }
   //如果未创建对象
   if (!lidarPtr)
   {
-    info("SDK initializing");
+    logger.info("SDK initializing");
 
     //根据雷达类型创建对应的实例
     if (isNetTOFLidar(m_LidarType))
-      lidarPtr = new ydlidar::ETLidarDriver(); //T15
+      lidarPtr = std::make_unique<ydlidar::ETLidarDriver>(); //T15
     else if (isGSLidar(m_LidarType)) //GS
-      lidarPtr = new ydlidar::GSLidarDriver(m_DeviceType);
+      lidarPtr = std::make_unique<ydlidar::GSLidarDriver>(m_DeviceType);
     else if (isSDMLidar(m_LidarType)) //SDM
-      lidarPtr = new ydlidar::SDMLidarDriver();
+      lidarPtr = std::make_unique<ydlidar::SDMLidarDriver>();
     else if (isDTSLidar(m_LidarType)) //SDM
-      lidarPtr = new ydlidar::DTSLidarDriver();
+      lidarPtr = std::make_unique<ydlidar::DTSLidarDriver>();
     else if (isTIALidar(m_LidarType))
-      lidarPtr = new ydlidar::TiaLidarDriver();
+      lidarPtr = std::make_unique<ydlidar::TiaLidarDriver>();
     else //通用雷达
-      lidarPtr = new ydlidar::YDlidarDriver(m_DeviceType);
+      lidarPtr = std::make_unique<ydlidar::YDlidarDriver>(m_DeviceType);
 
     if (!lidarPtr)
     {
-      error("Create driver fail!");
+      logger.error("Create driver fail!");
       return false;
     }
 
-    info("SDK has been initialized");
-    info("SDK Version: %s", lidarPtr->getSDKVersion().c_str());
+    logger.info("SDK has been initialized");
+    logger.info(fmt::format("SDK Version: {}", lidarPtr->getSDKVersion().c_str()));
   }
 
   if (lidarPtr->isconnected())
@@ -1793,7 +1797,7 @@ bool CYdLidar::checkConnect()
   // Is it COMX, X>4? ->  "\\.\COMX"
   if (m_SerialPort.size() >= 3)
   {
-    if (tolower(m_SerialPort[0]) == 'c' && 
+    if (tolower(m_SerialPort[0]) == 'c' &&
         tolower(m_SerialPort[1]) == 'o' &&
         tolower(m_SerialPort[2]) == 'm')
     {
@@ -1810,24 +1814,24 @@ bool CYdLidar::checkConnect()
   {
     if (isNetTOFLidar(m_LidarType))
     {
-      error("Error, cannot bind to the specified IP Address[%s]",
-        m_SerialPort.c_str());
+      logger.error(fmt::format("Error, cannot bind to the specified IP Address[{}]",
+        m_SerialPort.c_str()));
     }
     else
     {
-      error("Error, cannot bind to the specified [%s:%s] and [%s:%d]",
+      logger.error(fmt::format("Error, cannot bind to the specified [{}:{}] and [{}:{}]",
         m_DeviceType != YDLIDAR_TYPE_SERIAL ? "IP Address" : "serial port",
-        m_SerialPort.c_str(), 
-        m_DeviceType != YDLIDAR_TYPE_SERIAL ? "network port" : "baudrate", 
-        m_SerialBaudrate);
+        m_SerialPort.c_str(),
+        m_DeviceType != YDLIDAR_TYPE_SERIAL ? "network port" : "baudrate",
+        m_SerialBaudrate));
     }
 
     return false;
   }
 
-  info("Connect elapsed time %u ms", getms() - t);
-  info("Lidar successfully connected [%s:%d]", 
-    m_SerialPort.c_str(), m_SerialBaudrate);
+  logger.info(fmt::format("Connect elapsed time {} ms", getms() - t));
+  logger.info(fmt::format("Lidar successfully connected [{}] at baudrate[{}]",
+    m_SerialPort.c_str(), m_SerialBaudrate));
   return true;
 }
 
@@ -1839,7 +1843,7 @@ bool CYdLidar::checkStatus()
   uint32_t t = getms();
   getDeviceHealth();
   getDeviceInfo();
-  info("Check status, Elapsed time %u ms", getms() - t);
+  logger.info(fmt::format("Check status, Elapsed time {} ms", getms() - t));
 
   return true;
 }
@@ -1880,12 +1884,12 @@ namespace ydlidar
 //打印logo字符
 void printLogo()
 {
-  info("__   ______  _     ___ ____    _    ____");
-  info("\\ \\ / /  _ \\| |   |_ _|  _ \\  / \\  |  _ \\");
-  info(" \\ V /| | | | |    | || | | |/ _ \\ | |_) |");
-  info("  | | | |_| | |___ | || |_| / ___ \\|  _ <");
-  info("  |_| |____/|_____|___|____/_/   \\_\\_| \\_\\");
-  info("");
+  std::cout << "__   ______  _     ___ ____    _    ____" << std::endl;
+  std::cout << "\\ \\ / /  _ \\| |   |_ _|  _ \\  / \\  |  _ \\" << std::endl;
+  std::cout << " \\ V /| | | | |    | || | | |/ _ \\ | |_) |" << std::endl;
+  std::cout << "  | | | |_| | |___ | || |_| / ___ \\|  _ <" << std::endl;
+  std::cout << "  |_| |____/|_____|___|____/_/   \\_\\_| \\_\\" << std::endl;
+  std::cout << std::endl;
 }
 
 }

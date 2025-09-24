@@ -1,7 +1,14 @@
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.25)
 PROJECT(ydlidar_test)
-add_compile_options(-std=c++11) # Use C++11
+
+# Set C++ standard
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Set C standard
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 
 #Include directories
 INCLUDE_DIRECTORIES(
@@ -19,7 +26,7 @@ foreach(child ${APP_LIST})
   string(REPLACE "${curdir}/" "" app_main ${child})
   string(REPLACE ".cpp" "" APP_NAME ${app_main})
   ADD_EXECUTABLE(${APP_NAME} ${app_main})
-  TARGET_LINK_LIBRARIES(${APP_NAME} ydlidar_sdk)
+  TARGET_LINK_LIBRARIES(${APP_NAME} ydlidar_sdk fmt::fmt)
 
   INSTALL(TARGETS ${APP_NAME}
     RUNTIME DESTINATION bin
