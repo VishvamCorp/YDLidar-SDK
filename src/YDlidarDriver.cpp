@@ -617,7 +617,7 @@ result_t YDlidarDriver::waitDevicePackage(uint32_t timeout) {
     uint32_t st = getms();
     uint32_t wt = 0;
     while ((wt = getms() - st) <= timeout) {
-        lidar_ans_header head = {0};
+        struct lidar_ans_header head = {};
         ret                   = waitResponseHeader(&head, timeout);
         if (!IS_OK(ret)) {
             return ret;
@@ -740,7 +740,7 @@ result_t YDlidarDriver::parseResponseHeader(uint8_t *packageBuffer, uint32_t tim
                         // Timestamp checksum detection
                         uint8_t csc = 0;  // Calculate checksum
                         uint8_t csr = 0;  // Actual checksum
-                        for (int i = 0; i < SIZE_STAMPPACKAGE; ++i) {
+                        for (size_t i = 0; i < SIZE_STAMPPACKAGE; ++i) {
                             if (i == 2) {
                                 csr = globalRecvBuffer[lastPos + i];
                             } else {
@@ -948,7 +948,7 @@ bool YDlidarDriver::parseStampData(uint32_t timeout) {
     getData(globalRecvBuffer, rs);
     // Check if the 8 bytes of data contain AA55, if so, it means there is no timestamp data currently
     int pos = 0;
-    for (int i = 0; i < rs; ++i) {
+    for (size_t i = 0; i < rs; ++i) {
         uint8_t c = globalRecvBuffer[i];
         switch (pos) {
             case 0: {
@@ -2347,7 +2347,7 @@ bool YDlidarDriver::getPitchAngle(float &pitch) {
     uint32_t st      = getms();
     uint32_t wt      = 0;
     while ((wt = getms() - st) <= timeout) {
-        lidar_ans_header head = {0};
+        struct lidar_ans_header head = {};
         ret                   = waitResponseHeader(&head, timeout);
         if (!IS_OK(ret)) {
             return false;

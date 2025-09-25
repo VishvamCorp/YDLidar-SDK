@@ -109,6 +109,7 @@ class ChannelDevice {
    */
 
   virtual bool setDTR(bool level = true) {
+    (void)level;
     return true;
   }
   /*!

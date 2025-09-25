@@ -196,7 +196,7 @@ void CSimpleSocket::closePort() {
 void CSimpleSocket::flush() {
   if (isOpen()) {
     size_t size = 0;
-    int ret = waitfordata(1024, 2000, &size);
+    waitfordata(1024, 2000, &size);
 
     if (size > 0) {
       uint8_t *buf = static_cast<uint8_t *>(alloca(size * sizeof(uint8_t)));
@@ -208,10 +208,10 @@ void CSimpleSocket::flush() {
 
 size_t CSimpleSocket::available() {
   size_t returned_size = 0;
-  int max_fd;
+  // int max_fd;
   FD_ZERO(&m_readFds);
   FD_SET(m_socket, &m_readFds);
-  max_fd = static_cast<int>(m_socket + 1);
+  // max_fd = static_cast<int>(m_socket + 1);
 
   if (IsSocketValid()) {
     if (IOCTLSOCKET(m_socket, FIONREAD, &returned_size) == -1) {
@@ -428,13 +428,11 @@ uint32_t CSimpleSocket::GetWindowSize(uint32_t nOptionName) {
 //------------------------------------------------------------------------------
 uint32_t CSimpleSocket::SetWindowSize(uint32_t nOptionName,
                                       uint32_t nWindowSize) {
-  uint32_t nRetVal = 0;
-
   //-------------------------------------------------------------------------
   // no socket given, return system default allocate our own new socket
   //-------------------------------------------------------------------------
   if (m_socket != CSimpleSocket::SocketError) {
-    nRetVal = SETSOCKOPT(m_socket, SOL_SOCKET, nOptionName, &nWindowSize,
+    SETSOCKOPT(m_socket, SOL_SOCKET, nOptionName, &nWindowSize,
                          sizeof(nWindowSize));
     TranslateSocketError();
   } else {

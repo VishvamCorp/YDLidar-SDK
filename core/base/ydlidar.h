@@ -180,7 +180,7 @@ inline bool fileExists(const std::string &filename) {
   struct _stat info = {0};
   int ret = _stat(filename.c_str(), &info);
 #else
-  struct stat info = {0};
+  struct stat info = {};
   int ret = stat(filename.c_str(), &info);
 #endif
   return (ret == 0);

@@ -288,7 +288,7 @@ struct device_info {
 // Device information structure (with module index)
 struct device_info_ex {
     uint8_t     id = 0;
-    device_info di = {0};
+    struct device_info di = {};
 };
 
 /// LiDAR Health Information

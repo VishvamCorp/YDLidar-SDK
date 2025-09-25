@@ -552,10 +552,9 @@ inline bool isSupportMotorCtrl(int model) {
       model == DriverInterface::YDLIDAR_S4 ||
       model == DriverInterface::YDLIDAR_S4B) {
     ret = true;
-
   }
 
-  return true;
+  return ret;
 }
 
 /*!
@@ -775,7 +774,7 @@ inline bool isSupportHeartBeat(int model) {
     ret = true;
   }
 
-  return true;
+  return ret;
 }
 
 /**
@@ -1085,7 +1084,7 @@ inline bool parseLaserDebugInfo(const LaserDebug &debug, device_info &di)
     // Using sprintf here causes a buffer overflow when invoked from Python
     //  sprintf(reinterpret_cast<char*>(di.serialnum),
     //    "%04u%02u%02u%08u", Year + 2020, Moth, Date, Number);
-    for (int i = 0; i < SDK_SNLEN && i < sn.size(); i++)
+    for (size_t i = 0; i < SDK_SNLEN && i < sn.size(); i++)
     {
       di.serialnum[i] = std::stoi(std::string(1, sn.at(i)));
     }

@@ -536,6 +536,8 @@ class CSimpleSocket : public ChannelDevice {
   bool EnableNagleAlgoritm();
 
   virtual bool Open(const char *pAddr, uint16_t nPort) {
+    (void)pAddr;
+    (void)nPort;
     return true;
   }
 

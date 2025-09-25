@@ -48,7 +48,7 @@ using namespace ydlidar::core::math;
 /*-------------------------------------------------------------
             Constructor
 -------------------------------------------------------------*/
-CYdLidar::CYdLidar() : lidarPtr(nullptr),
+CYdLidar::CYdLidar() :
 #ifdef DEBUG_LOG
       logger("YDLIDAR", Log::Facility::DEBUG)
 #else
@@ -614,8 +614,8 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
       m_MaxAngle = temp;
     }
 
-    int all_node_count = count;
-    LaserDebug debug = {0};
+    size_t all_node_count = count;
+    LaserDebug debug = {};
 
     memset(&debug, 0, sizeof(debug));
     outscan.config.min_angle = math::from_degrees(m_MinAngle);
@@ -666,7 +666,7 @@ bool CYdLidar::doProcessSimple(LaserScan &outscan)
     // printf("AngleOffset %f\n", m_AngleOffset);
 
     //遍历一圈点
-    for (int i = 0; i < count; i++)
+    for (size_t i = 0; i < count; i++)
     {
       const node_info& node = global_nodes[i];
 
@@ -1133,8 +1133,8 @@ bool CYdLidar::checkLidarAbnormal()
         if (!(lidarPtr->getHasDeviceInfo() & EPT_Module))
         {
           // printf("Get module device info\n");
-          LaserDebug debug = {0};
-          for (int i = 0; i < count; ++i)
+          LaserDebug debug = {};
+          for (size_t i = 0; i < count; ++i)
           {
             parsePackageNode(global_nodes[i], debug);
             if (global_nodes[i].error)

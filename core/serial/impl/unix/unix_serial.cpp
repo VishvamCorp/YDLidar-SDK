@@ -657,7 +657,7 @@ Serial::SerialImpl::~SerialImpl() {
   pthread_mutex_destroy(&this->write_mutex);
 }
 
-bool Serial::SerialImpl::open() 
+bool Serial::SerialImpl::open()
 {
   if (port_.empty())
     return false;
@@ -946,7 +946,7 @@ bool Serial::SerialImpl::waitReadable(uint32_t timeout) {
 
 
 int Serial::SerialImpl::waitfordata(
-  size_t data_count, 
+  size_t data_count,
   uint32_t timeout,
   size_t *returned_size)
 {
@@ -1032,7 +1032,7 @@ int Serial::SerialImpl::waitfordata(
     while (available() < data_count)
     {
       int64_t dt = t.remaining();
-      if ((dt <= 0)) 
+      if ((dt <= 0))
       {
         // Timed out
         ydlidar::core::common::warn("Wait for data [%u]ms timeout", timeout);
@@ -1135,7 +1135,7 @@ size_t Serial::SerialImpl::read(uint8_t *buf, size_t size) {
   return bytes_read;
 }
 
-size_t Serial::SerialImpl::write(const uint8_t *data, size_t length) 
+size_t Serial::SerialImpl::write(const uint8_t *data, size_t length)
 {
   if (!isOpen())
     return 0;
@@ -1236,7 +1236,7 @@ size_t Serial::SerialImpl::write(const uint8_t *data, size_t length)
   }
   else
   {
-    ssize_t realSize = ::write(fd_, data, length);
+    size_t realSize = ::write(fd_, data, length);
     if (realSize < 1)
     {
         ydlidar::core::common::error("Failed to write serial port data [%d]", errno);
@@ -1245,7 +1245,7 @@ size_t Serial::SerialImpl::write(const uint8_t *data, size_t length)
     else if (realSize < length)
     {
         ydlidar::core::common::warn("Failed to write serial port data, "
-                      "real size [%ld] < expect size [%u]", 
+                      "real size [%zu] < expect size [%zu]",
             realSize, length);
         return realSize;
     }
@@ -1412,7 +1412,8 @@ bool Serial::SerialImpl::setCustomBaudRate(unsigned long baudrate) {
     return false;
   }
 
-  if (serial.custom_divisor * baudrate != serial.baud_base) {
+  if ((serial.custom_divisor * baudrate) != static_cast<long unsigned>(serial.baud_base)) {
+    // FIXME: What should we do in this case?
   }
 
   if (::ioctl(fd_, TIOCSSERIAL, &serial) == -1) {

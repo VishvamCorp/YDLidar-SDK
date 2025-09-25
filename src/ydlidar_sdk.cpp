@@ -214,7 +214,7 @@ int lidarPortList(LidarPort *ports) {
   std::map<std::string, std::string> lists = ydlidar::lidarPortList();
   std::map<std::string, std::string>::iterator it;
 
-  int i = 0;
+  size_t i = 0;
 
   for (it = lists.begin(); it != lists.end(); it++) {
     string_t port;

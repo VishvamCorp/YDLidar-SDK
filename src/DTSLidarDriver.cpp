@@ -310,6 +310,7 @@ result_t DTSLidarDriver::createThread()
 
 result_t DTSLidarDriver::startScan(bool force, uint32_t timeout)
 {
+    UNUSED(force);
     result_t ret = RESULT_FAIL;
     if (!m_isConnected)
         return RESULT_FAIL;
@@ -357,6 +358,7 @@ std::string DTSLidarDriver::getSDKVersion()
 
 const char *DTSLidarDriver::DescribeError(bool isTCP)
 {
+    UNUSED(isTCP);
     if (_serial)
     {
         return _serial->DescribeError();
@@ -773,6 +775,8 @@ result_t DTSLidarDriver::getData(uint8_t *data, size_t size)
 //设置扫描频率(无)
 result_t DTSLidarDriver::setScanFreq(float sf, uint32_t timeout)
 {
+    UNUSED(sf);
+    UNUSED(timeout);
     m_ScanFreq = 0;
     return RESULT_OK;
 }
@@ -871,7 +875,7 @@ result_t DTSLidarDriver::checkAutoConnecting()
 
 result_t DTSLidarDriver::startAutoScan(bool force, uint32_t timeout)
 {
-    result_t ans;
+    UNUSED(force);
 
     if (!m_isConnected)
         return RESULT_FAIL;

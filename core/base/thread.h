@@ -41,6 +41,14 @@ namespace ydlidar
           return (static_cast<CLASS *>(param)->*PROC)();
         }
 
+        static void* thread_adapter(void* arg) {
+          Thread* thread = static_cast<Thread*>(arg);
+          if (thread && thread->_func) {
+            thread->_func(thread->_param);
+          }
+          return nullptr;
+        }
+
         static Thread createThread(thread_proc_t proc, void *param = NULL)
         {
           Thread thread_(proc, param);
@@ -50,9 +58,11 @@ namespace ydlidar
 #else
           assert(sizeof(thread_._handle) >= sizeof(pthread_t));
 
+          thread_._param = param;
+          thread_._func = proc;
           int ret = pthread_create((pthread_t *)&thread_._handle,
-                                   NULL, (void *(*)(void *))proc,
-                                   param);
+                                   NULL, thread_adapter,
+                                   &thread_);
           if (ret != 0)
           {
             thread_._handle = 0;

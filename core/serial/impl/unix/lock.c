@@ -204,6 +204,7 @@ int fhs_lock(const char *filename, int pid) {
    * Problem lockfiles will be dealt with.  Some may not even be in use.
    *
    */
+  (void) pid;
   int fd, j;
   char lockinfo[12];
   char file[80], *p;
@@ -279,6 +280,7 @@ int fhs_lock(const char *filename, int pid) {
         rather than an exercise, we will handle them.
 ----------------------------------------------------------*/
 int uucp_lock(const char *filename, int pid) {
+  (void) pid;
   char lockfilename[80], lockinfo[12];
   char name[80];
   int fd;

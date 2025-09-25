@@ -285,6 +285,7 @@ namespace ydlidar
         virtual bool getDeviceInfoEx(device_info &di, int type=EPT_Module)
         {
           UNUSED(di);
+          UNUSED(type);
           return false;
         }
 
@@ -340,6 +341,8 @@ namespace ydlidar
         virtual result_t getScanFrequency(scan_frequency &frequency,
                                           uint32_t timeout = DEFAULT_TIMEOUT)
         {
+          UNUSED(frequency);
+          UNUSED(timeout);
           return RESULT_FAIL;
         }
 
@@ -355,6 +358,8 @@ namespace ydlidar
         virtual result_t setScanFrequencyAdd(scan_frequency &frequency,
                                              uint32_t timeout = DEFAULT_TIMEOUT)
         {
+          UNUSED(frequency);
+          UNUSED(timeout);
           return RESULT_FAIL;
         }
 
@@ -370,6 +375,8 @@ namespace ydlidar
         virtual result_t setScanFrequencyDis(scan_frequency &frequency,
                                              uint32_t timeout = DEFAULT_TIMEOUT)
         {
+          UNUSED(frequency);
+          UNUSED(timeout);
           return RESULT_FAIL;
         }
 
@@ -385,6 +392,8 @@ namespace ydlidar
         virtual result_t setScanFrequencyAddMic(scan_frequency &frequency,
                                                 uint32_t timeout = DEFAULT_TIMEOUT)
         {
+          UNUSED(frequency);
+          UNUSED(timeout);
           return RESULT_FAIL;
         }
 
@@ -400,6 +409,8 @@ namespace ydlidar
         virtual result_t setScanFrequencyDisMic(scan_frequency &frequency,
                                                 uint32_t timeout = DEFAULT_TIMEOUT)
         {
+          UNUSED(frequency);
+          UNUSED(timeout);
           return RESULT_FAIL;
         }
 
@@ -415,6 +426,8 @@ namespace ydlidar
         virtual result_t getSamplingRate(sampling_rate &rate,
                                          uint32_t timeout = DEFAULT_TIMEOUT)
         {
+          UNUSED(rate);
+          UNUSED(timeout);
           return RESULT_FAIL;
         }
 
@@ -430,6 +443,8 @@ namespace ydlidar
         virtual result_t setSamplingRate(sampling_rate &rate,
                                          uint32_t timeout = DEFAULT_TIMEOUT)
         {
+          UNUSED(rate);
+          UNUSED(timeout);
           return RESULT_FAIL;
         }
 
@@ -445,6 +460,8 @@ namespace ydlidar
         virtual result_t getZeroOffsetAngle(offset_angle &angle,
                                             uint32_t timeout = DEFAULT_TIMEOUT)
         {
+          UNUSED(angle);
+          UNUSED(timeout);
           return RESULT_FAIL;
         }
 
@@ -461,6 +478,8 @@ namespace ydlidar
         virtual result_t setScanHeartbeat(scan_heart_beat &beat,
                                           uint32_t timeout = DEFAULT_TIMEOUT)
         {
+          UNUSED(beat);
+          UNUSED(timeout);
           return RESULT_FAIL;
         }
 
@@ -491,6 +510,8 @@ namespace ydlidar
          * @return 成功返回RESULT_OK，否则返回非RESULT_OK
          */
         virtual result_t setWorkMode(int mode = 0, uint8_t addr = 0x00) {
+          UNUSED(mode);
+          UNUSED(addr);
           return RESULT_FAIL;
         }
 
