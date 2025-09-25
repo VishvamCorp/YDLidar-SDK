@@ -106,6 +106,15 @@ include_directories(.)
 include_directories(core)
 include_directories(src)
 
+########################################################
+## Create configure file for inclusion in library
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/ydlidar_config.h.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/ydlidar_config.h" )
+set( GENERATED_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/ydlidar_config.h )
+
+# Include binary directory for generated headers (MUST be before add_subdirectory calls)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
 #############################################################################
 # addd subdirectory
 add_subdirectory(core)
@@ -121,13 +130,6 @@ endif()
 # PARSE libraries
 include(common/ydlidar_parse)
 include_directories(${SDK_INCS})
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
-
-########################################################
-## Create configure file for inclusion in library
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/ydlidar_config.h.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/ydlidar_config.h" )
-set( GENERATED_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/ydlidar_config.h )
 
 
 #############################################################################
@@ -157,7 +159,11 @@ install(TARGETS ${PROJECT_NAME}
     INCLUDES DESTINATION include)
 
 if(TARGET fmt)
-    install(TARGETS fmt EXPORT ${PROJECT_NAME}Targets)
+    install(TARGETS fmt
+        EXPORT ${PROJECT_NAME}Targets
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin)
 endif()
 
 #############################################################################################
@@ -235,8 +241,22 @@ include_directories(${CMAKE_BINARY_DIR} )
 ##################################################################################
 # make an uninstall target
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in)
-add_custom_target(uninstall
-    COMMAND "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
+
+# Check if uninstall target already exists
+if(NOT TARGET uninstall)
+    # Create new uninstall target
+    add_custom_target(uninstall
+        COMMAND "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+        COMMENT "Running YDLIDAR SDK uninstall script")
+else()
+    # Create a unique target for this SDK and make it depend on the existing uninstall target
+    add_custom_target(uninstall_ydlidar_sdk
+        COMMAND "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+        COMMENT "Running YDLIDAR SDK uninstall script")
+
+    # Make the existing uninstall target depend on our SDK uninstall target
+    add_dependencies(uninstall uninstall_ydlidar_sdk)
+endif()
 
 
 ########################################################
