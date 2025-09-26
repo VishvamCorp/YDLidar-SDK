@@ -109,43 +109,37 @@ namespace core {
         }
 
         const char *Serial::DescribeError(SerialPortError err) {
-            char const *errorString = "Unknown error";
-
             switch (err) {
                 case Serial::NoError:
-                    errorString = ("No error");
-                    break;
+                    return "No error";
+
+                case Serial::DeviceNotFoundError:
+                    return "Device not found";
 
                 case Serial::OpenError:
-                    errorString = ("Device is already open");
-                    break;
+                    return "Device is already open";
 
                 case Serial::NotOpenError:
-                    errorString = ("Device is not open");
-                    break;
+                    return "Device is not open";
 
                 case Serial::TimeoutError:
-                    errorString = ("Operation timed out");
-                    break;
+                    return "Operation timed out";
 
                 case Serial::ReadError:
-                    errorString = ("Error reading from device");
-                    break;
+                    return "Error reading from device";
 
                 case Serial::WriteError:
-                    errorString = ("Error writing to device");
-                    break;
+                    return "Error writing to device";
 
                 case Serial::ResourceError:
-                    errorString = ("Device disappeared from the system");
-                    break;
+                    return "Device disappeared from the system";
 
-                default:
-                    // an empty string will be interpreted as "Unknown error"
-                    break;
+                default: {
+                    static char unknown_error[64];
+                    snprintf(unknown_error, sizeof(unknown_error), "Unknown error %d", err);
+                    return unknown_error;
+                }
             }
-
-            return errorString;
         }
 
         size_t Serial::read_(uint8_t *buffer, size_t size) {

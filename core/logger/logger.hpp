@@ -30,6 +30,14 @@ namespace core {
             DEBUG   = 7, /*!< Debug: debug-level messages */
         };
 
+        /**
+         * @brief Callback function to send logs to except of console output
+         *
+         * @param[in] facility Facility level
+         * @param[in] msg      Log message
+         */
+        typedef void (*LogCallback)(enum Facility facility, const std::string &msg);
+
         class Logger {
           private:
             const std::string _ident;       /*!< Identifier for the log messages */
@@ -66,6 +74,13 @@ namespace core {
              * @param facility Facility level
              */
             void setFacility(enum Facility facility);
+
+            /**
+             * @brief Set callback function to send logs to except of console output
+             *
+             * @param[in] callback Callback function
+             */
+            static void setCallback(LogCallback callback);
 
             /**
              * @brief Convert facility level to string

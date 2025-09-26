@@ -42,6 +42,8 @@ static std::thread            outputThread;  /*!< Thread for the output */
 static std::mutex              logQueueCVMutex;
 static std::condition_variable logQueueCV;
 
+static LogCallback callback = nullptr;
+
 static void outputTask(void);
 static void pushMessage(std::chrono::milliseconds ts, enum Facility facility, const std::string &ident, const std::string &msg);
 };  // namespace ydlidar::core::Log
@@ -131,6 +133,10 @@ void Logger::setFacility(Facility facility) {
     _maxFacility = facility;
 }
 
+void Logger::setCallback(LogCallback callback) {
+    ydlidar::core::Log::callback = callback;
+}
+
 const std::string Logger::facilityToColor(Facility facility) {
     switch (facility) {
         case EMERG:          /* system is unusable */
@@ -209,6 +215,13 @@ void outputTask(void) {
 
             for (const auto &msg : messages) {
                 std::stringstream output;
+
+                if (callback != nullptr) {
+                    output << "[" << msg.ident << "] " << msg.msg;
+                    callback(msg.facility, output.str());
+
+                    continue;
+                }
 
                 auto colorCode    = Logger::facilityToColor(msg.facility);
                 auto facilityName = Logger::facilityToString(msg.facility);

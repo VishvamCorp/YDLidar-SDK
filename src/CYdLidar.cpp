@@ -423,7 +423,7 @@ bool CYdLidar::initialize()
   uint32_t t = getms();
   if (!checkConnect())
   {
-    logger.error("Error initializing YDLIDAR check Comms.");
+    logger.error("Connection failed.");
     return false;
   }
 
@@ -1814,12 +1814,12 @@ bool CYdLidar::checkConnect()
   {
     if (isNetTOFLidar(m_LidarType))
     {
-      logger.error(fmt::format("Error, cannot bind to the specified IP Address[{}]",
+      logger.error(fmt::format("Can`t bind to the specified IP Address[{}]",
         m_SerialPort.c_str()));
     }
     else
     {
-      logger.error(fmt::format("Error, cannot bind to the specified [{}:{}] and [{}:{}]",
+      logger.error(fmt::format("Can`t bind to the specified [{}:{}] and [{}:{}]",
         m_DeviceType != YDLIDAR_TYPE_SERIAL ? "IP Address" : "serial port",
         m_SerialPort.c_str(),
         m_DeviceType != YDLIDAR_TYPE_SERIAL ? "network port" : "baudrate",
