@@ -97,11 +97,10 @@ function(install_package)
   if( NOT EXPORT_${PROJECT_NAME} )
         # add "installed" library to list of required libraries to link against
         if( PACKAGE_LIB_NAME )
-            if(POLICY CMP0026)
-              cmake_policy( SET CMP0026 OLD )
-            endif()
-            get_target_property( _target_library ${PACKAGE_LIB_NAME} LOCATION )
-            get_filename_component( _lib ${_target_library} NAME )
+            # Reading the LOCATION property needs policy CMP0026 OLD, which CMake has
+            # deprecated. $<TARGET_FILE:> is the supported replacement and install(FILES)
+            # accepts generator expressions. The old _lib variable was never used.
+            set( _target_library "$<TARGET_FILE:${PACKAGE_LIB_NAME}>" )
             list( INSERT PACKAGE_LINK_LIBS 0 ${PACKAGE_LIB_NAME} )
         endif()
 

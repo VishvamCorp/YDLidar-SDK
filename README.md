@@ -21,7 +21,7 @@ YDLidar SDK consists of YDLidar SDK communication protocol, YDLidar SDK core, YD
 
 Fork
 -----
-This fork is maintained by [Vishvam Corp](http://www.vishwamcorp.com/) to provide fixes and improvements to the original SDK for own use and for the community.
+This fork is maintained by [Vishwam Corp](http://www.vishwamcorp.com/) to provide fixes and improvements to the original SDK for own use and for the community.
 
 ### Prerequisites
 * Linux

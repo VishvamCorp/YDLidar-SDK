@@ -72,18 +72,15 @@ include(install_package)
 
 #############################################################################
 # Policy CMP0023 allows to mix old and new interfaces of target_link_libraries
+#
+# The upstream SDK also pinned CMP0053/CMP0037/CMP0043 to OLD. All three were dropped:
+# CMake deprecated the OLD behaviour, and none of them is actually needed here —
+# no target is named "test"/"all"/"install" (CMP0037) and no COMPILE_DEFINITIONS_<Config>
+# property is ever set (CMP0043), so both were pure noise. CMP0053 only changes how
+# exotic ${} escapes are parsed, and the SDK has none.
 if(COMMAND cmake_policy)
 	cmake_policy(SET CMP0003 NEW) # We don't want to mix relative and absolute paths in linker lib lists.
 	cmake_policy(SET CMP0005 NEW) # Escape definitions (-D) strings
-	if(POLICY CMP0053)
-		cmake_policy(SET CMP0053 OLD) # Simplify variable reference and escape sequence evaluation.
-	endif()
-	if(POLICY CMP0037)
-		cmake_policy(SET CMP0037 OLD)  # Allow defining target "test"
-	endif()
-	if(POLICY CMP0043)
-		cmake_policy(SET CMP0043 OLD) #  Ignore COMPILE_DEFINITIONS_<Config> properties.
-	endif()
 endif()
 
 #############################################################################
@@ -96,9 +93,25 @@ option( BUILD_TEST "Build Test." OFF)
 ############################################################################
 # find package
 find_package(SWIG)
-find_package(PythonInterp)
-find_package(PythonLibs)
 find_package(GTest)
+
+# FindPythonInterp / FindPythonLibs were removed from CMake (policy CMP0148), so the
+# modern FindPython3 module is used instead. The python/ and csharp/ subprojects and
+# the summary script still read the legacy variable names, so those are mapped over.
+find_package(Python3 QUIET COMPONENTS Interpreter Development)
+
+set(PYTHONLIBS_FOUND FALSE)
+
+if(Python3_Development_FOUND)
+	set(PYTHONLIBS_FOUND TRUE)
+	set(PYTHON_INCLUDE_PATH ${Python3_INCLUDE_DIRS})
+	set(PYTHON_LIBRARIES ${Python3_LIBRARIES})
+	set(PYTHON_VERSION_STRING ${Python3_VERSION})
+endif()
+
+if(Python3_Interpreter_FOUND)
+	set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+endif()
 
 ############################################################################
 # include headers
@@ -159,6 +172,13 @@ install(TARGETS ${PROJECT_NAME}
     INCLUDES DESTINATION include)
 
 if(TARGET fmt)
+    # fmt is a FetchContent dependency linked PRIVATE into the SDK, so its headers are
+    # not part of our public API and were never installed. Clearing PUBLIC_HEADER makes
+    # that explicit and silences the "no PUBLIC_HEADER DESTINATION" warning — declaring
+    # a destination instead would make install() chase paths relative to fmt's own
+    # source tree and fail.
+    set_target_properties(fmt PROPERTIES PUBLIC_HEADER "")
+
     install(TARGETS fmt
         EXPORT ${PROJECT_NAME}Targets
         LIBRARY DESTINATION lib
@@ -183,7 +203,9 @@ enable_testing()
 
 ############################################################################
 # build ydlidar sdk python version
-if(${SWIG_FOUND} AND ${PYTHONLIBS_FOUND})
+# Undereferenced form: ${VAR} expands to nothing when a find_package fails, which would
+# turn this into the syntax error "if( AND )".
+if(SWIG_FOUND AND PYTHONLIBS_FOUND)
     message(STATUS "build python API....")
     include_directories(python)
     add_subdirectory(python)

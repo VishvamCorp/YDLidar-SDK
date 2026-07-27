@@ -4,7 +4,7 @@
  *
  * @version 0.1
  * @author Nikita Bulaev, Grovety Inc, agency@grovety.com
- * @copyright Copyright (c) 2024-2025, Vishvam corp.
+ * @copyright Copyright (c) 2024-2025, Vishwam corp.
  */
 #pragma once
 
