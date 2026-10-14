@@ -68,7 +68,9 @@
 #define SDK_SDM_POINT_COUNT 1
 #define SDK_CMD_HEADFLAG0 0xAA //Protocol header flag 1
 #define SDK_CMD_HEADFLAG1 0x55 //Protocol header flag 2
+#undef SDK_CMD_STARTSCAN
 #define SDK_CMD_STARTSCAN 0x60 //Start ranging
+#undef SDK_CMD_STOPSCAN
 #define SDK_CMD_STOPSCAN 0x61 //Stop ranging
 #define SDK_CMD_GETVERSION 0x62 //Get version information
 #define SDK_CMD_SELFCHECK 0x63 //Self-check

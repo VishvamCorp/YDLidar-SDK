@@ -1591,7 +1591,7 @@ result_t GSLidarDriver::getDeviceInfo(
         return ret;
     for (uint8_t i=0; i<c; ++i)
     {
-        gs_package_head head = {0};
+        gs_package_head head = {};
         ret = waitResponseHeaderEx(&head, GS_LIDAR_CMD_GET_VERSION3, timeout);
         if (!IS_OK(ret))
             break;
@@ -1623,7 +1623,7 @@ result_t GSLidarDriver::getDeviceInfo(
     ret = sendCommand(GS_LIDAR_CMD_GET_VERSION);
     for (uint8_t i=0; i<c; ++i)
     {
-        gs_package_head head = {0};
+        gs_package_head head = {};
         ret = waitResponseHeaderEx(&head, GS_LIDAR_CMD_GET_VERSION, timeout);
         if (!IS_OK(ret))
             return ret;
@@ -1636,7 +1636,7 @@ result_t GSLidarDriver::getDeviceInfo(
         if (!IS_OK(ret))
             break;
 
-        gs_device_info gsdi = {0};
+        gs_device_info gsdi = {};
         getData(reinterpret_cast<uint8_t*>(&gsdi), sizeof(gsdi));
 
         device_info_ex di;
@@ -1675,7 +1675,7 @@ result_t GSLidarDriver::getDeviceInfo1(device_info &info, uint32_t timeout)
             return RESULT_FAIL;
         }
 
-        gs_device_info di = {0};
+        gs_device_info di = {};
         getData(reinterpret_cast<uint8_t*>(&di), sizeof(di));
 
         if (LIDAR_MODULE_1 == head.address)
@@ -1846,7 +1846,7 @@ bool GSLidarDriver::startOta(uint8_t addr)
     uint8_t dsr[] = {0x00, 0x00,
                     0x73, 0x74, 0x61, 0x72, 0x74, 0x20, 0x64, 0x6F,
                     0x77, 0x6E, 0x6C, 0x6F, 0x61, 0x64, 0x00, 0x00};
-    for (int i = 0; i < sizeof(dsr); ++i)
+    for (size_t i = 0; i < sizeof(dsr); ++i)
         d.push_back(dsr[i]);
     std::vector<uint8_t> dataRecv;
     bool ret = sendData(
@@ -1893,9 +1893,9 @@ bool GSLidarDriver::execOta(uint8_t addr, const std::vector<uint8_t>& data)
         int offset = j * DATA_LEN_PER_FRAME; //Data offset
         d.push_back(offset & 0xFF);
         d.push_back(offset >> 8);
-        for (int i = 0; i < sizeof(fix); ++i)
+        for (size_t i = 0; i < sizeof(fix); ++i)
             d.push_back(fix[i]);
-        for (int i = offset; i < offset + DATA_LEN_PER_FRAME; ++i)
+        for (size_t i = offset; i < size_t(offset + DATA_LEN_PER_FRAME); ++i)
         {
             if (i < data.size())
                 d.push_back(data.at(i));
@@ -1936,7 +1936,7 @@ bool GSLidarDriver::stopOta(uint8_t addr)
     uint8_t dsr[] = {0x00, 0x00,
                      0x63, 0x6F, 0x6D, 0x70, 0x6C, 0x65, 0x74, 0x65,
                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    for (int i = 0; i < sizeof(dsr); ++i)
+    for (size_t i = 0; i < sizeof(dsr); ++i)
         d.push_back(dsr[i]);
     //Encryption flag
     d.push_back(m_OtaEncode);
@@ -1986,7 +1986,7 @@ bool GSLidarDriver::isOtaRespOk(
     d.push_back(GS_CMD_ACKOK);
     //Compute 8-bit checksum
     uint8_t cs = 0;
-    for (int k=4; k<d.size(); ++k)
+    for (size_t k=4; k<d.size(); ++k)
         cs += uint8_t(d.at(k));
     d.push_back(cs);
 
@@ -2018,7 +2018,7 @@ bool GSLidarDriver::sendData(
     std::vector<uint8_t> ds;
     //Compute 8-bit checksum
     uint8_t cs = 0;
-    for (int k=4; k<d.size(); ++k)
+    for (size_t k=4; k<d.size(); ++k)
         cs += uint8_t(d.at(k));
     d.push_back(cs);
 
@@ -2027,7 +2027,7 @@ bool GSLidarDriver::sendData(
     result_t r = sendData(d.data(), d.size());
     if (!IS_OK(r))
         return ret;
-    gs_package_head head = {0};
+    gs_package_head head = {};
     r = waitResponseHeaderEx(&head, cmdRecv, timeout);
     if (!IS_OK(r))
         return ret;

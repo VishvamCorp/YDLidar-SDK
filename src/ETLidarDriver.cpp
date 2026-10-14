@@ -139,7 +139,7 @@ result_t ETLidarDriver::connect(const char *port_path, uint32_t baudrate) {
     return RESULT_FAIL;
   }
 
-  if (config.dataRecvPort != baudrate) {
+  if (uint32_t(config.dataRecvPort) != baudrate) {
     m_baudrate = config.dataRecvPort;
 //    if (!m_force_update) {
 //      m_user_config = config;

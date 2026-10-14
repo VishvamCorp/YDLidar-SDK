@@ -16,7 +16,9 @@
 
 #define SDK_DTS_POINT_COUNT 1
 #define SDK_CMD_HEADFLAG 0xA5 //协议头标识1
+#undef SDK_CMD_STARTSCAN
 #define SDK_CMD_STARTSCAN 0x01 //开启测距
+#undef SDK_CMD_STOPSCAN
 #define SDK_CMD_STOPSCAN 0x02 //停止测距
 #define SDK_CMD_CALIBPARAM 0x06 //获取校准参数
 #define SDK_DTS_DEVNUM 0x03 //设备号

@@ -719,7 +719,10 @@ result_t YDlidarDriver::parseResponseHeader(uint8_t *packageBuffer, uint32_t tim
                         recvPos        = 0;
                         size_t lastPos = pos - 1;
                         // Parse timestamp (total 8 bytes)
-                        int remainSize = SIZE_STAMPPACKAGE - (recvSize - pos + 1);  // Calculate remaining bytes to read
+                        size_t remainSize = 0;  // Calculate remaining bytes to read
+                        if (recvSize - pos + 1 < SIZE_STAMPPACKAGE) {
+                            remainSize = SIZE_STAMPPACKAGE - (recvSize - pos + 1);
+                        }
                         if (remainSize > 0) {
                             size_t lastSize = recvSize;
                             ans             = waitForData(remainSize, timeout - waitTime, &recvSize);
